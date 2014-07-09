@@ -9,18 +9,6 @@ struct Node {
 };
 
 class Graph {
-private:
-  void addNode(int);
-  void addEdge(int, int);
-  void strTrimRight(std::string&);
-  int addEdgeLine(std::string&, int);
-  void addNodeBuild(int);
-
-  // Refinement
-  int LevelBackDfs(int, int);
-  int LevelDfs(int, int);
-  int OrderBackDfs(int, int);
-  int OrderDfs(int, int);
 public:
   std::vector<Node> nodes;
   std::vector<int> edges;
