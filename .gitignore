@@ -19,3 +19,6 @@
 *.exe
 *.out
 *.app
+
+# graph data from Florian Merz' diploma thesis
+data/
