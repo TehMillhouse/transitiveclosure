@@ -1,2 +1,2 @@
 all:
-	g++ -std=gnu++11 -O3 *.c
+	g++ -std=gnu++11 -O3 *.cpp
