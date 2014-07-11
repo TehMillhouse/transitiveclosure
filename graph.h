@@ -24,5 +24,7 @@ public:
   int levels; // total number of topological levels
   void readGraph(std::istream&);
   void writeGraph(std::ostream&);
+  Graph* breadthFirstSearch();
+  Graph* depthFirstSearch();
   Graph* topologicalLevelSearch();
 };

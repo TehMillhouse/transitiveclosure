@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   g->readGraph(in);
   std::cout << "n = " << g->nodes.size() << ", m = " << g->edges.size() << std::endl;
   std::ofstream out(argv[2]);
-  Graph *gOut = g->topologicalLevelSearch();
+  Graph *gOut = g->depthFirstSearch();
   gOut->writeGraph(out);
   std::cout << "n = " << gOut->nodes.size() << ", m = " << gOut->edges.size() << std::endl;
 }

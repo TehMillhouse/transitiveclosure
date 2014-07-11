@@ -1,5 +1,6 @@
 #include "graph.h"
 #include <sstream>
+#include <stack>
 
 // Algorithm 4.3
 void Graph::setLevel(Node &v) {
@@ -18,6 +19,60 @@ void Graph::setTopologicalLevels() {
   for (Node &v : nodes)
     if (v.in == 0)
       setLevel(v);
+}
+
+Graph* Graph::depthFirstSearch() {
+  Graph *ret = new Graph();
+  std::vector<Node*> stack;
+
+  for (Node &s : nodes) {
+    ret->pushNode();
+    stack.push_back(&s);
+    for (Node &v : nodes) v.visited = 0;
+
+    while (stack.size()) {
+      Node *v = stack[stack.size()-1];
+      stack.pop_back();
+      if (v != &s)
+        ret->pushEdge(v - &nodes[0]);
+      for (int i = 0; i < v->out; i++) {
+        Node &u = nodes[edges[v->offset + i]];
+        if (!u.visited) {
+          stack.push_back(&u);
+          u.visited = 1;
+        }
+      }
+    }
+    stack.clear();
+  }
+  return ret;
+}
+
+Graph* Graph::breadthFirstSearch() {
+  Graph *ret = new Graph();
+  std::vector<Node*> stack;
+
+  for (Node &s : nodes) {
+    ret->pushNode();
+    stack.push_back(&s);
+    for (Node &v : nodes) v.visited = 0;
+
+    while (stack.size()) {
+      Node *v = stack[stack.size()-1];
+      stack.pop_back();
+      if (v != &s)
+        ret->pushEdge(v - &nodes[0]);
+      for (int i = 0; i < v->out; i++) {
+        Node &u = nodes[edges[v->offset + i]];
+        if (!u.visited) {
+          stack.push_back(&u);
+          u.visited = 1;
+        }
+      }
+    }
+    stack.clear();
+  }
+  return ret;
 }
 
 Graph* Graph::topologicalLevelSearch() {
