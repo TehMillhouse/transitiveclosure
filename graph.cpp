@@ -1,6 +1,7 @@
 #include "graph.h"
 #include <sstream>
 #include <stack>
+#include <queue>
 
 // Algorithm 4.3
 void Graph::setLevel(Node &v) {
@@ -23,54 +24,52 @@ void Graph::setTopologicalLevels() {
 
 Graph* Graph::depthFirstSearch() {
   Graph *ret = new Graph();
-  std::vector<Node*> stack;
+  std::stack<Node*> stack;
 
   for (Node &s : nodes) {
     ret->pushNode();
-    stack.push_back(&s);
+    stack.push(&s);
     for (Node &v : nodes) v.visited = 0;
 
     while (stack.size()) {
-      Node *v = stack[stack.size()-1];
-      stack.pop_back();
+      Node *v = stack.top();
+      stack.pop();
       if (v != &s)
         ret->pushEdge(v - &nodes[0]);
       for (int i = 0; i < v->out; i++) {
         Node &u = nodes[edges[v->offset + i]];
         if (!u.visited) {
-          stack.push_back(&u);
+          stack.push(&u);
           u.visited = 1;
         }
       }
     }
-    stack.clear();
   }
   return ret;
 }
 
 Graph* Graph::breadthFirstSearch() {
   Graph *ret = new Graph();
-  std::vector<Node*> stack;
+  std::queue<Node*> queue;
 
   for (Node &s : nodes) {
     ret->pushNode();
-    stack.push_back(&s);
+    queue.push(&s);
     for (Node &v : nodes) v.visited = 0;
 
-    while (stack.size()) {
-      Node *v = stack[stack.size()-1];
-      stack.pop_back();
+    while (queue.size()) {
+      Node *v = queue.front();
+      queue.pop();
       if (v != &s)
         ret->pushEdge(v - &nodes[0]);
       for (int i = 0; i < v->out; i++) {
         Node &u = nodes[edges[v->offset + i]];
         if (!u.visited) {
-          stack.push_back(&u);
+          queue.push(&u);
           u.visited = 1;
         }
       }
     }
-    stack.clear();
   }
   return ret;
 }
