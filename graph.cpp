@@ -160,7 +160,6 @@ void Graph::readGraph(std::istream& in) {
 }
 
 void Graph::writeGraph(std::ostream& out) {
-  std::cout << "Nodes: " << nodes.size() << " Edges: " << edges.size() << std::endl;
   out << "graph_for_greach" << std::endl;
   out << nodes.size() << std::endl;
 
