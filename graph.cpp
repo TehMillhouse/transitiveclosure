@@ -25,11 +25,11 @@ void Graph::setTopologicalLevels() {
 Graph* Graph::depthFirstSearch() {
   Graph *ret = new Graph();
   std::stack<Node*> stack;
+  std::vector<Node*> visited;
 
   for (Node &s : nodes) {
     ret->pushNode();
     stack.push(&s);
-    for (Node &v : nodes) v.visited = 0;
 
     while (stack.size()) {
       Node *v = stack.top();
@@ -40,10 +40,13 @@ Graph* Graph::depthFirstSearch() {
         Node &u = nodes[edges[v->offset + i]];
         if (!u.visited) {
           stack.push(&u);
+          visited.push_back(&u);
           u.visited = 1;
         }
       }
     }
+    for (Node *v : visited) v->visited = 0;
+    visited.clear();
   }
   return ret;
 }
@@ -51,11 +54,11 @@ Graph* Graph::depthFirstSearch() {
 Graph* Graph::breadthFirstSearch() {
   Graph *ret = new Graph();
   std::queue<Node*> queue;
+  std::vector<Node*> visited;
 
   for (Node &s : nodes) {
     ret->pushNode();
     queue.push(&s);
-    for (Node &v : nodes) v.visited = 0;
 
     while (queue.size()) {
       Node *v = queue.front();
@@ -66,10 +69,13 @@ Graph* Graph::breadthFirstSearch() {
         Node &u = nodes[edges[v->offset + i]];
         if (!u.visited) {
           queue.push(&u);
+          visited.push_back(&u);
           u.visited = 1;
         }
       }
     }
+    for (Node *v : visited) v->visited = 0;
+    visited.clear();
   }
   return ret;
 }
