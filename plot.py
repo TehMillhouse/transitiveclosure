@@ -22,7 +22,7 @@ graphs = [(n, gen_dag(n, 2*n)) for n in nodes]
 
 def execute(algo, g):
     start = time.time()
-    p = subprocess.Popen(["./hull", algo], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    p = subprocess.Popen(["./closure", algo], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
     p.stdin.write(g.encode('ascii'))
     p.wait()
     return time.time() - start

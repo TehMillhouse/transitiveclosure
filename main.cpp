@@ -4,7 +4,7 @@
 
 int main(int argc, char **argv) {
   if (argc != 2) {
-    std::cout << "Usage: hull <algorithm>" << std::endl;
+    std::cout << "Usage: closure <algorithm>" << std::endl;
     return 42;
   }
 
