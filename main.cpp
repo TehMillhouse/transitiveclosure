@@ -3,14 +3,13 @@
 #include "graph.h"
 
 int main(int argc, char **argv) {
-  if (argc != 3) {
-    std::cout << "Usage: hull <algorithm> <input file>" << std::endl;
+  if (argc != 2) {
+    std::cout << "Usage: hull <algorithm>" << std::endl;
     return 42;
   }
 
   Graph *g = new Graph();
-  std::ifstream in(argv[2]);
-  g->readGraph(in);
+  g->readGraph(std::cin);
   std::cerr << "n = " << g->nodes.size() << ", m = " << g->edges.size() << std::endl;
 
   std::string algo = argv[1];

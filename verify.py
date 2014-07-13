@@ -6,8 +6,8 @@ import subprocess
 
 algorithms = ["BFS", "DFS", "TLS"]
 
-in_file = sys.argv[1]
-output = [subprocess.check_output(["./hull", algo, in_file]).decode('ascii').split("\n") for algo in algorithms]
+in_file = open(sys.argv[1])
+output = [subprocess.check_output(["./hull", algo], stdin=in_file).decode('ascii').split("\n") for algo in algorithms]
 lengths = list(map(len, output))
 if len(set(lengths)) != 1:
     print("Differing output line counts: {}".format(lengths))
