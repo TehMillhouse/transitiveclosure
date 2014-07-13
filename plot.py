@@ -22,10 +22,10 @@ graphs = [(n, gen_dag(n, 2*n)) for n in nodes]
 
 def execute(algo, g):
     start = time.time()
-    p = subprocess.Popen(["./closure", algo], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    p = subprocess.Popen(["./closure", algo], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     p.stdin.write(g.encode('ascii'))
     p.wait()
-    return time.time() - start
+    return float(p.stderr.read()[:-2])
 
 for algo in algorithms:
     n = 30000

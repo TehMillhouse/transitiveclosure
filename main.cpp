@@ -7,7 +7,6 @@ template <class G>
 int exec(std::string algo) {
   Graph *g = new Graph();
   g->readGraph(std::cin);
-  std::cerr << "n = " << g->nodes.size() << ", m = " << g->edges.size() << std::endl;
 
   G *gOut;
   clock_t start = clock();
