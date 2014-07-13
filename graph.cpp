@@ -22,118 +22,6 @@ void Graph::setTopologicalLevels() {
       setLevel(v);
 }
 
-Graph* Graph::depthFirstSearch() {
-  Graph *ret = new Graph();
-  std::stack<Node*> stack;
-  std::vector<Node*> visited;
-
-  for (Node &s : nodes) {
-    ret->pushNode();
-    stack.push(&s);
-
-    while (stack.size()) {
-      Node *v = stack.top();
-      stack.pop();
-      if (v != &s)
-        ret->pushEdge(v - &nodes[0]);
-      for (int i = 0; i < v->out; i++) {
-        Node &u = nodes[edges[v->offset + i]];
-        if (!u.visited) {
-          stack.push(&u);
-          visited.push_back(&u);
-          u.visited = 1;
-        }
-      }
-    }
-    for (Node *v : visited) v->visited = 0;
-    visited.clear();
-  }
-  return ret;
-}
-
-Graph* Graph::breadthFirstSearch() {
-  Graph *ret = new Graph();
-  std::queue<Node*> queue;
-  std::vector<Node*> visited;
-
-  for (Node &s : nodes) {
-    ret->pushNode();
-    queue.push(&s);
-
-    while (queue.size()) {
-      Node *v = queue.front();
-      queue.pop();
-      if (v != &s)
-        ret->pushEdge(v - &nodes[0]);
-      for (int i = 0; i < v->out; i++) {
-        Node &u = nodes[edges[v->offset + i]];
-        if (!u.visited) {
-          queue.push(&u);
-          visited.push_back(&u);
-          u.visited = 1;
-        }
-      }
-    }
-    for (Node *v : visited) v->visited = 0;
-    visited.clear();
-  }
-  return ret;
-}
-
-Graph* Graph::topologicalLevelSearch() {
-  //TLS
-  //Find topological levels
-  //Foreach s in V do
-  //  next[level(s)] := {s}
-  //  For l:= level(s)+1 to L do // L is # of topological levels
-  //    next[l] := {} // stacks
-  //  For l:= level(s) to L do
-  //    For each v in next(s) do
-  //      reached := {v}; next := {}
-  //      For each (v,u) in E do
-  //        if u was not yet reached then
-  //          next[level(u)].push(u)
-
-  setTopologicalLevels();
-  for (Node &v : nodes) v.visited = 0;
-
-  Graph *ret = new Graph();
-  std::vector<std::vector<Node*>> next(levels);
-
-  for (Node &s : nodes) {
-    ret->pushNode();
-    next[s.level].push_back(&s);
-
-    for (int l = s.level; l < levels; l++) {
-      for (Node *v : next[l]) {
-        v->visited = 0;
-        if (v != &s)
-          ret->pushEdge(v - &nodes[0]);
-        for (int i = 0; i < v->out; i++) {
-          Node &u = nodes[edges[v->offset + i]];
-          if (!u.visited) {
-            next[u.level].push_back(&u);
-            u.visited = 1;
-          }
-        }
-      }
-      next[l].clear();
-    }
-  }
-  return ret;
-}
-
-void Graph::pushNode() {
-  Node v {};
-  v.offset = edges.size();
-  nodes.push_back(v);
-}
-
-void Graph::pushEdge(int dest) {
-  edges.push_back(dest);
-  nodes[nodes.size()-1].out++;
-}
-
 void Graph::readGraph(std::istream& in) {
   std::string line;
   int n, m;
@@ -175,4 +63,10 @@ void Graph::writeGraph(std::ostream& out) {
       out << edges[nodes[i].offset + j] << " ";
     out << "#" << std::endl;
   }
+}
+
+void CountingGraph::writeGraph(std::ostream& out) {
+  for (int edges : nodes)
+    out << edges << " ";
+  out << std::endl;
 }
