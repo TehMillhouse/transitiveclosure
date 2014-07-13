@@ -16,7 +16,14 @@ int exec(std::string algo) {
     gOut = g->depthFirstSearch<G>();
   else if (algo == "TLS")
     gOut = g->topologicalLevelSearch<G>();
-  else {
+  else if (algo == "TLS64") {
+    auto nodeCounts = g->bitParallelTopologicalLevelSearch();
+    std::cerr << double(clock() - start) / CLOCKS_PER_SEC << "s" << std::endl;
+    for (int i : nodeCounts)
+      std::cout << i << " ";
+    std::cout << std::endl;
+    return 0;
+  } else {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
   }

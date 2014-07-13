@@ -10,7 +10,7 @@ struct Node {
   int in; // number of incoming edges
   int out; // number of outgoing edges
   int level; // topological level
-  int visited;
+  unsigned long long visited;
   // edge indices [offset, offset + out) belong to this node
 };
 
@@ -123,6 +123,45 @@ public:
           }
         }
         next[l].clear();
+      }
+    }
+    return ret;
+  }
+
+  std::vector<int> bitParallelTopologicalLevelSearch() {
+    setTopologicalLevels();
+    for (Node &v : nodes) v.visited = 0;
+
+    std::vector<int> ret(nodes.size());
+    std::vector<std::vector<Node*>> next(levels);
+
+    std::vector<std::vector<Node*>> levelBuckets(levels);
+    for (Node &v : nodes)
+      levelBuckets[v.level].push_back(&v);
+    for (auto &levelNodes : levelBuckets) {
+      for (int segment = 0; segment < levelNodes.size(); segment += 64) {
+        int level = levelNodes[segment]->level;
+        for (int i = 0; i < 64 && segment + i < levelNodes.size(); i++) {
+          Node *v = levelNodes[segment+i];
+          v->visited = 1ull << i;
+          next[level].push_back(v);
+        }
+        for (int l = level; l < levels; l++) {
+          for (Node *v : next[l]) {
+            for (int i = 0; i < v->out; i++) {
+              Node &u = nodes[edges[v->offset + i]];
+              if (!u.visited)
+                next[u.level].push_back(&u);
+              u.visited |= v->visited;
+            }
+            if (l > level)
+              for (int i = 0; i < 64; i++)
+                if ((1ull << i) & v->visited)
+                  ret[levelNodes[segment+i] - &nodes[0]]++;
+            v->visited = 0;
+          }
+          next[l].clear();
+        }
       }
     }
     return ret;
