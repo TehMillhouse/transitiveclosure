@@ -10,7 +10,7 @@ import numpy
 
 import gendag
 
-algorithms = ["BFS", "DFS", "TLS", "TLS64"]
+algorithms = [("TLS", "count"), ("TLS", "array"), ("TLS", "matrix")]
 sizes = [(int(2**i),2**17) for i in numpy.arange(10, 16, 0.5)]
 #sizes = [(2**i,2**(i+1)) for i in range(8, 20)]
 
@@ -23,15 +23,17 @@ graphs = [(n, gen_dag(n, m)) for n, m in sizes]
 
 def execute(algo, g):
     start = time.time()
-    p = subprocess.Popen(["./closure", algo], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    p = subprocess.Popen(["./closure", algo[0], algo[1]], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     p.stdin.write(g.encode('ascii'))
     p.stdin.flush()
-    p.wait()
+    return_code = p.wait()
+    if return_code:
+        raise Exception("{} returned code {}".format(algo, return_code))
     output = p.stderr.read()
     print(output)
     return float(output[:-2])
 
 for algo in algorithms:
-    pyplot.plot([n for n, g in graphs], [execute(algo, g)/n for n, g in graphs], label=algo)
+    pyplot.plot([n for n, g in graphs], [execute(algo, g)/n for n, g in graphs], label=str(algo))
 pyplot.legend()
 pyplot.show()

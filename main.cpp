@@ -5,7 +5,7 @@
 
 template <class G>
 int exec(std::string algo) {
-  Graph *g = new Graph();
+  AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
   g->readGraph(std::cin);
 
   G *gOut;
@@ -17,12 +17,7 @@ int exec(std::string algo) {
   else if (algo == "TLS")
     gOut = g->topologicalLevelSearch<G>();
   else if (algo == "TLS64") {
-    auto nodeCounts = g->bitParallelTopologicalLevelSearch();
-    std::cerr << double(clock() - start) / CLOCKS_PER_SEC << "s" << std::endl;
-    for (int i : nodeCounts)
-      std::cout << i << " ";
-    std::cout << std::endl;
-    return 0;
+    gOut = g->bitParallelTopologicalLevelSearch<G>();
   } else {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
@@ -35,12 +30,15 @@ int exec(std::string algo) {
 
 int main(int argc, char **argv) {
   if (argc < 2 || argc > 3) {
-    std::cout << "Usage: closure <algorithm> [-small_output]" << std::endl;
+    std::cout << "Usage: closure <algorithm> <output format>" << std::endl;
     return 42;
   }
 
-  if (argc == 3)
+  std::string format = argv[2];
+  if (format == "count")
     return exec<CountingGraph>(argv[1]);
-  else
-    return exec<Graph>(argv[1]);
+  else if (format == "array")
+    return exec<AdjacencyArrayGraph>(argv[1]);
+  else if (format == "matrix")
+    return exec<AdjacencyMatrixGraph>(argv[1]);
 }

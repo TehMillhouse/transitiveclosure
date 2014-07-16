@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <queue>
+#include <cstdlib>
 
 struct Node {
   int offset; // offset into the edge array
@@ -14,7 +15,7 @@ struct Node {
   // edge indices [offset, offset + out) belong to this node
 };
 
-class Graph {
+class AdjacencyArrayGraph {
 public:
   void setLevel(Node&);
   void setTopologicalLevels();
@@ -23,10 +24,11 @@ public:
   int levels; // total number of topological levels
   void readGraph(std::istream&);
   void writeGraph(std::ostream&);
+  AdjacencyArrayGraph(int n) {}
 
   template <class G>
   G* depthFirstSearch() {
-    G *ret = new G();
+    G *ret = new G(nodes.size());
     std::stack<Node*> stack;
     std::vector<Node*> visited;
 
@@ -56,7 +58,7 @@ public:
 
   template <class G>
   G* breadthFirstSearch() {
-    G *ret = new G();
+    G *ret = new G(nodes.size());
     std::queue<Node*> queue;
     std::vector<Node*> visited;
 
@@ -102,7 +104,7 @@ public:
     setTopologicalLevels();
     for (Node &v : nodes) v.visited = 0;
 
-    G *ret = new G();
+    G *ret = new G(nodes.size());
     std::vector<std::vector<Node*>> next(levels);
 
     for (Node &s : nodes) {
@@ -128,45 +130,6 @@ public:
     return ret;
   }
 
-  std::vector<int> bitParallelTopologicalLevelSearch() {
-    setTopologicalLevels();
-    for (Node &v : nodes) v.visited = 0;
-
-    std::vector<int> ret(nodes.size());
-    std::vector<std::vector<Node*>> next(levels);
-
-    std::vector<std::vector<Node*>> levelBuckets(levels);
-    for (Node &v : nodes)
-      levelBuckets[v.level].push_back(&v);
-    for (auto &levelNodes : levelBuckets) {
-      for (int segment = 0; segment < levelNodes.size(); segment += 64) {
-        int level = levelNodes[segment]->level;
-        for (int i = 0; i < 64 && segment + i < levelNodes.size(); i++) {
-          Node *v = levelNodes[segment+i];
-          v->visited = 1ull << i;
-          next[level].push_back(v);
-        }
-        for (int l = level; l < levels; l++) {
-          for (Node *v : next[l]) {
-            for (int i = 0; i < v->out; i++) {
-              Node &u = nodes[edges[v->offset + i]];
-              if (!u.visited)
-                next[u.level].push_back(&u);
-              u.visited |= v->visited;
-            }
-            if (l > level)
-              for (int i = 0; i < 64; i++)
-                if ((1ull << i) & v->visited)
-                  ret[levelNodes[segment+i] - &nodes[0]]++;
-            v->visited = 0;
-          }
-          next[l].clear();
-        }
-      }
-    }
-    return ret;
-  }
-
   void pushNode() {
     Node v {};
     v.offset = edges.size();
@@ -177,20 +140,87 @@ public:
     edges.push_back(dest);
     nodes[nodes.size()-1].out++;
   }
+
+  template<class G> G* bitParallelTopologicalLevelSearch();
+};
+
+template<class G> inline G* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch() {
+  setTopologicalLevels();
+  for (Node &v : nodes) v.visited = 0;
+
+  G *ret = new G(nodes.size());
+  std::vector<std::vector<Node*>> next(levels);
+
+  std::vector<std::vector<Node*>> levelBuckets(levels);
+  for (Node &v : nodes)
+    levelBuckets[v.level].push_back(&v);
+  for (auto &levelNodes : levelBuckets) {
+    for (int segment = 0; segment < levelNodes.size(); segment += 64) {
+      int level = levelNodes[segment]->level;
+      for (int i = 0; i < 64 && segment + i < levelNodes.size(); i++) {
+        Node *v = levelNodes[segment+i];
+        v->visited = 1ull << i;
+        next[level].push_back(v);
+      }
+      for (int l = level; l < levels; l++) {
+        for (Node *v : next[l]) {
+          for (int i = 0; i < v->out; i++) {
+            Node &u = nodes[edges[v->offset + i]];
+            if (!u.visited)
+              next[u.level].push_back(&u);
+            u.visited |= v->visited;
+          }
+          if (l > level)
+            for (int i = 0; i < 64; i++)
+              if ((1ull << i) & v->visited)
+                ret->addEdge(levelNodes[segment+i] - &nodes[0], v - &nodes[0]);
+          v->visited = 0;
+        }
+        next[l].clear();
+      }
+    }
+  }
+  return ret;
+}
+
+template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch<AdjacencyArrayGraph>() {
+  // no way to efficiently implement this
+  abort();
+}
+
+class AdjacencyMatrixGraph {
+private:
+  int currentNode = -1; // to emulate adjacency array API
+public:
+  std::vector<std::vector<bool>> adj;
+  AdjacencyMatrixGraph(int n);
+  void addEdge(int from, int to);
+  void writeGraph(std::ostream&);
+
+  void pushNode() {
+    currentNode++;
+  }
+
+  void pushEdge(int dest) {
+    adj[currentNode][dest] = 1;
+  }
 };
 
 // graph stub that just counts added edges instead of storing them
 class CountingGraph {
 private:
   std::vector<int> nodes;
+  int currentNode = -1; // to emulate adjacency array API
 public:
+  CountingGraph(int n);
+  void addEdge(int from, int to);
+  void writeGraph(std::ostream&);
+
   void pushNode() {
-    nodes.push_back(0);
+    currentNode++;
   }
 
   void pushEdge(int dest) {
-    nodes[nodes.size()-1]++;
+    nodes[currentNode]++;
   }
-
-  void writeGraph(std::ostream&);
 };

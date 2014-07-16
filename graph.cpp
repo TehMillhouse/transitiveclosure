@@ -4,7 +4,7 @@
 #include <queue>
 
 // Algorithm 4.3
-void Graph::setLevel(Node &v) {
+void AdjacencyArrayGraph::setLevel(Node &v) {
   for (int i = 0; i < v.out; i++) {
     Node &u = nodes[edges[v.offset + i]];
     u.level = std::max(u.level, v.level + 1);
@@ -16,13 +16,13 @@ void Graph::setLevel(Node &v) {
 }
 
 // Algorithm 4.4
-void Graph::setTopologicalLevels() {
+void AdjacencyArrayGraph::setTopologicalLevels() {
   for (Node &v : nodes)
     if (v.in == 0)
       setLevel(v);
 }
 
-void Graph::readGraph(std::istream& in) {
+void AdjacencyArrayGraph::readGraph(std::istream& in) {
   std::string line;
   int n, m;
   std::stringstream ss;
@@ -53,7 +53,7 @@ void Graph::readGraph(std::istream& in) {
   }
 }
 
-void Graph::writeGraph(std::ostream& out) {
+void AdjacencyArrayGraph::writeGraph(std::ostream& out) {
   out << "graph_for_greach" << std::endl;
   out << nodes.size() << std::endl;
 
@@ -63,6 +63,36 @@ void Graph::writeGraph(std::ostream& out) {
       out << edges[nodes[i].offset + j] << " ";
     out << "#" << std::endl;
   }
+}
+
+AdjacencyMatrixGraph::AdjacencyMatrixGraph(int n) {
+  adj = std::vector<std::vector<bool>>(n, std::vector<bool>(n));
+}
+
+void AdjacencyMatrixGraph::addEdge(int from, int to) {
+  adj[from][to] = true;
+}
+
+void AdjacencyMatrixGraph::writeGraph(std::ostream& out) {
+  const int n = adj.size();
+  out << "graph_for_greach" << std::endl;
+  out << n << std::endl;
+
+  for (unsigned int i = 0; i < n; i++) {
+    out << i << ": ";
+    for (unsigned int j = 0; j < n; j++)
+      if (adj[i][j])
+        out << j << " ";
+    out << "#" << std::endl;
+  }
+}
+
+CountingGraph::CountingGraph(int n) {
+  nodes.resize(n);
+}
+
+void CountingGraph::addEdge(int from, int to) {
+  nodes[from]++;
 }
 
 void CountingGraph::writeGraph(std::ostream& out) {
