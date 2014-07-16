@@ -35,5 +35,7 @@ def execute(algo, g):
 
 for algo in algorithms:
     pyplot.plot([n for n, g in graphs], [execute(algo, g)/n for n, g in graphs], label=str(algo))
+pyplot.ylabel('Time / Number of nodes')
+pyplot.xlabel('Number of nodes')
 pyplot.legend()
 pyplot.show()
