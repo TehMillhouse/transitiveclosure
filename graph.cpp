@@ -73,6 +73,12 @@ void AdjacencyMatrixGraph::addEdge(int from, int to) {
   adj[from][to] = true;
 }
 
+bool AdjacencyMatrixGraph::hasEdge(int from, int to)
+{
+	return adj[from][to];
+}
+
+
 void AdjacencyMatrixGraph::writeGraph(std::ostream& out) {
   const int n = adj.size();
   out << "graph_for_greach" << std::endl;

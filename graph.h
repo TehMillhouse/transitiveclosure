@@ -26,6 +26,33 @@ public:
   void writeGraph(std::ostream&);
   AdjacencyArrayGraph(int n) {}
 
+  template <class G> 
+  G* warshallALgorithm() {
+		G * result = new G(nodes.size());
+		for(int i = 0; i < nodes.size(); i++) {
+			Node & v = nodes[i];
+			result->addEdge(i, i);
+			for(int l = v.offset; l < v.offset + v.out; l++) {
+				result->addEdge(i, edges[l]);
+			}
+		}
+		
+		for(int k = 0; k < this->nodes.size(); ++k) {
+			for(int i = 0; i < this->nodes.size(); ++i) {
+				if(result->hasEdge(k, i)) {
+					for(int j = 0; j < this->nodes.size(); ++j) {
+						if(result->hasEdge(i, j)) {
+							int newInt = 1;
+							result->addEdge(k, j, newInt);
+						}
+					}
+				}
+			}
+		}
+	
+		return result;
+	}
+  
   template <class G>
   G* depthFirstSearch() {
     G *ret = new G(nodes.size());
@@ -141,8 +168,12 @@ public:
     nodes[nodes.size()-1].out++;
   }
 
-  template<class G> G* bitParallelTopologicalLevelSearch();
+  template<class G> 
+  G* bitParallelTopologicalLevelSearch();
 };
+
+
+
 
 template<class G> inline G* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch() {
   setTopologicalLevels();
@@ -188,6 +219,7 @@ template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologic
   abort();
 }
 
+
 class AdjacencyMatrixGraph {
 private:
   int currentNode = -1; // to emulate adjacency array API
@@ -195,6 +227,7 @@ public:
   std::vector<std::vector<bool>> adj;
   AdjacencyMatrixGraph(int n);
   void addEdge(int from, int to);
+	bool hasEdge(int from, int to);
   void writeGraph(std::ostream&);
 
   void pushNode() {
