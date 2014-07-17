@@ -36,28 +36,33 @@ def execute(algo, g):
 
 plot_debug = False
 def bake_files(algorithms, graphs):
+    if plot_debug:
+        r = """1024  0.107248
+        1448  0.165722
+        2048  0.263774
+        2896  0.424517
+        EOF
+        1024  0.114945
+        1448  0.174251
+        2048  0.279616
+        2896  0.468908
+        EOF
+        1024  0.10936
+        1448  0.167379
+        2048  0.265336
+        2896  0.42262
+        EOF
+        """
+        with open('out/toy', 'w') as out:
+            out.write(r)
+        return
     for algo in algorithms:
-        if plot_debug:
-            r = """1024  0.107248
-            1448  0.165722
-            2048  0.263774
-            2896  0.424517
-            EOF
-            1024  0.114945
-            1448  0.174251
-            2048  0.279616
-            2896  0.468908
-            EOF
-            1024  0.10936
-            1448  0.167379
-            2048  0.265336
-            2896  0.42262
-            EOF
-            """
-        else:
-            r = [execute(algo, g[1]).decode('utf-8') for g in graphs] + ['EOF\n']
         with open('out/' + str(algo) + '_' + str(time.time()), 'w') as out:
-            out.write(''.join(r))
+            for g in graphs:
+                r = execute(algo, g[1]).decode('utf-8')
+                out.write(r)
+                out.flush()
+            out.write('EOF\n')
 
 def plot_files(files, titles):
     cmd = []
@@ -83,8 +88,8 @@ if __name__ == '__main__':
         print("""Usage: `plot.py bake` to create gnuplot files.
        `plot.py FILE1 [FILE2 [FILE3...]]` to plot files.""")
         exit()
-    init()
     if sys.argv[1] == 'bake':
+        init()
         print('creating gnuplot files...')
         bake_files(algorithms, graphs)
     else:
