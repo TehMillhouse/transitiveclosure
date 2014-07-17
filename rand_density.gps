@@ -1,6 +1,7 @@
 set ylabel "Time [s]"
 set xlabel "Nodes"
 set logscale x 2
+set title "Random DAG with m = 2^17 edges"
 #set term pngcairo
 #set output "graph.png"
 plot\
