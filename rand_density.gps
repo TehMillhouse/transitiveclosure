@@ -1,5 +1,6 @@
-set ylabel "Time / Node [s]"
+set ylabel "Time [s]"
 set xlabel "Nodes"
+set logscale x 2
 #set term pngcairo
 #set output "graph.png"
 plot\
