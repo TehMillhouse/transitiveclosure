@@ -74,7 +74,7 @@ def plot_files(files, titles):
                  'set ylabel "Time / Node [s]"\n'
                  'set grid\n'
                  'set xlabel "Nodes"\n'
-                 + ('set term pngcairo\nset output "graph.png"\n' if output_png else '')
+                 + ('set term pngcairo size 1024, 768\nset output "graph.png"\n' if output_png else '')
                  + 'plot '
                  + ', '.join(cmd) + '\n'
                 )
