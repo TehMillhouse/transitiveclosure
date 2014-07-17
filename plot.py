@@ -64,7 +64,7 @@ for algo in algorithms:
     cmd.append("'-' using ($1):($2 / $1) title %s with linespoints" % str(algo))
 plot = subprocess.Popen(['gnuplot'], stdin=subprocess.PIPE)
 real_cmd =  ('set xtics (1024, 2048, 4096, 8192, 16384, 32768, 65536)\n'
-             'set ylabel "Time / Node (s)"\n'
+             'set ylabel "Time / Node [s]"\n'
              'set xlabel "Nodes"\n'
              + ('set term pngcairo\nset output "graph.png"\n' if output_png else '')
              + 'plot '
