@@ -22,14 +22,17 @@ int exec(std::string algo) {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
   }
-  std::cerr << double(clock() - start) / CLOCKS_PER_SEC << "s" << std::endl;
+  // output format feasible for gnuplot:
+  // <#nodes>  <time / #nodes>
+  std::cerr << g->nodes.size() << "  ";
+  std::cerr << double(clock() - start) / CLOCKS_PER_SEC << std::endl;
 
   gOut->writeGraph(std::cout);
   return 0;
 }
 
 int main(int argc, char **argv) {
-  if (argc < 2 || argc > 3) {
+  if (argc != 3) {
     std::cout << "Usage: closure <algorithm> <output format>" << std::endl;
     return 42;
   }
