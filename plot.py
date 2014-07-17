@@ -36,6 +36,7 @@ results = []
 cmd = []
 to_file = True
 output_png = True
+plot_debug = False
 for algo in algorithms:
     if plot_debug:
         r = ''
