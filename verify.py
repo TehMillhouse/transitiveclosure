@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 
-algorithms = ["BFS", "DFS", "TLS"]
+algorithms = ["BFS", "DFS", "TLS", "WAR"]
 
 in_file = open(sys.argv[1])
 output = [subprocess.check_output(["./closure", algo], stdin=in_file).decode('ascii').split("\n") for algo in algorithms]

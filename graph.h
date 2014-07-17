@@ -24,6 +24,13 @@ public:
   int levels; // total number of topological levels
   void readGraph(std::istream&);
   void writeGraph(std::ostream&);
+	
+	void addEdge(int from, int to) {
+		abort();
+	}
+	
+	bool hasEdge(int from, int to);
+	
   AdjacencyArrayGraph(int n) {}
 
   template <class G> 
@@ -42,8 +49,7 @@ public:
 				if(result->hasEdge(k, i)) {
 					for(int j = 0; j < this->nodes.size(); ++j) {
 						if(result->hasEdge(i, j)) {
-							int newInt = 1;
-							result->addEdge(k, j, newInt);
+							result->addEdge(k, j);
 						}
 					}
 				}
@@ -249,6 +255,10 @@ public:
   void addEdge(int from, int to);
   void writeGraph(std::ostream&);
 
+	bool hasEdge(int from, int to) {
+		abort();
+	}
+	
   void pushNode() {
     currentNode++;
   }

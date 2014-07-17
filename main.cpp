@@ -18,7 +18,9 @@ int exec(std::string algo) {
     gOut = g->topologicalLevelSearch<G>();
   else if (algo == "TLS64") {
     gOut = g->bitParallelTopologicalLevelSearch<G>();
-  } else {
+  } else if (algo == "WAR") {
+		gOut = g->warshallALgorithm<G>();
+	} else {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
   }

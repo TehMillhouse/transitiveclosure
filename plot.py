@@ -10,7 +10,7 @@ import numpy
 
 import gendag
 
-algorithms = [("TLS", "count"), ("TLS", "array"), ("TLS", "matrix")]
+algorithms = [("TLS", "count"), ("TLS", "array"), ("TLS", "matrix"), ("WAR", "matrix")]
 sizes = [(int(2**i),2**17) for i in numpy.arange(10, 16, 0.5)]
 #sizes = [(2**i,2**(i+1)) for i in range(8, 20)]
 
