@@ -5,3 +5,9 @@ all:
 
 asm:
 	g++ -S -g0 $(CPPFLAGS)
+
+clean:
+	-rm out/*
+	-rm graph.png
+	-rm *.s
+	-rm *.o
