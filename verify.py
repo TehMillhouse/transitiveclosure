@@ -4,10 +4,13 @@ import os
 import sys
 import subprocess
 
-algorithms = ["BFS", "DFS", "TLS", "WAR"]
+algorithms = ["BFS", "DFS", "TLS", "TLS64", "WAR"]
 
-in_file = open(sys.argv[1])
-output = [subprocess.check_output(["./closure", algo], stdin=in_file).decode('ascii').split("\n") for algo in algorithms]
+def exec(algo, in_file):
+    with open(in_file) as f:
+        return subprocess.check_output(["./closure", algo, "matrix"], stdin=f).decode('ascii').split("\n")
+
+output = [exec(algo, sys.argv[1]) for algo in algorithms]
 lengths = list(map(len, output))
 if len(set(lengths)) != 1:
     print("Differing output line counts: {}".format(lengths))
