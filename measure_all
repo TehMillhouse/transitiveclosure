@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+for algo in BFS DFS TLS TLS64
+do
+  echo $algo
+  ./measure.py $algo > out/$algo.log
+done
