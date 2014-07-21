@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os
+import collections
 import sys
 import subprocess
 
@@ -15,9 +15,8 @@ lengths = list(map(len, output))
 if len(set(lengths)) != 1:
     print("Differing output line counts: {}".format(lengths))
 for lines in zip(*output):
-    lines = [sorted(line.split()) for line in lines]
-    for line in lines[1:]:
-        if line != lines[0]:
-            print(line)
-            print(lines[0])
-            os.exit(42)
+    lines = [tuple(sorted(line.split())) for line in lines]
+    if len(set(lines)) > 1:
+        for line in set(lines):
+            print("%s: %s" % ([algo for algo, line2 in zip(algorithms, lines) if line2 == line], line))
+        sys.exit(42)
