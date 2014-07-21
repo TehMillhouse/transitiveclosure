@@ -33,7 +33,7 @@ public:
 	
   AdjacencyArrayGraph(int n) {}
 
-  template <class G> 
+  template <class G>
   G* warshallALgorithm() {
 		G * result = new G(nodes.size());
 		for(int i = 0; i < nodes.size(); i++) {
@@ -43,22 +43,22 @@ public:
 				result->addEdge(i, edges[l]);
 			}
 		}
-		
+
 		for(int k = 0; k < this->nodes.size(); ++k) {
 			for(int i = 0; i < this->nodes.size(); ++i) {
-				if(result->hasEdge(k, i)) {
+				if(result->hasEdge(i, k)) {
 					for(int j = 0; j < this->nodes.size(); ++j) {
-						if(result->hasEdge(i, j)) {
-							result->addEdge(k, j);
+						if(result->hasEdge(k, j)) {
+							result->addEdge(i, j);
 						}
 					}
 				}
 			}
 		}
-	
+
 		return result;
 	}
-  
+
   template <class G>
   G* depthFirstSearch() {
     G *ret = new G(nodes.size());
