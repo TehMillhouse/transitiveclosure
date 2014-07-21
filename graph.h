@@ -72,8 +72,7 @@ public:
       while (stack.size()) {
         Node *v = stack.top();
         stack.pop();
-        if (v != &s)
-          ret->pushEdge(v - &nodes[0]);
+        ret->pushEdge(v - &nodes[0]);
         for (int i = 0; i < v->out; i++) {
           Node &u = nodes[edges[v->offset + i]];
           if (!u.visited) {
@@ -102,8 +101,7 @@ public:
       while (queue.size()) {
         Node *v = queue.front();
         queue.pop();
-        if (v != &s)
-          ret->pushEdge(v - &nodes[0]);
+        ret->pushEdge(v - &nodes[0]);
         for (int i = 0; i < v->out; i++) {
           Node &u = nodes[edges[v->offset + i]];
           if (!u.visited) {
@@ -147,8 +145,7 @@ public:
       for (int l = s.level; l < levels; l++) {
         for (Node *v : next[l]) {
           v->visited = 0;
-          if (v != &s)
-            ret->pushEdge(v - &nodes[0]);
+          ret->pushEdge(v - &nodes[0]);
           for (int i = 0; i < v->out; i++) {
             Node &u = nodes[edges[v->offset + i]];
             if (!u.visited) {
@@ -201,10 +198,9 @@ public:
                 next[u.level].push_back(&u);
               u.visited |= v->visited;
             }
-            if (l > level)
-              for (int i = 0; i < segment_size; i++)
-                if ((1ull << i) & v->visited)
-                  ret->addEdge(levelNodes[segment+i] - &nodes[0], v - &nodes[0]);
+            for (int i = 0; i < segment_size; i++)
+              if ((1ull << i) & v->visited)
+                ret->addEdge(levelNodes[segment+i] - &nodes[0], v - &nodes[0]);
             v->visited = 0;
           }
           next[l].clear();
