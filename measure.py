@@ -7,7 +7,7 @@ import subprocess
 import numpy
 import gendag
 
-sizes = [(int(2**i),2**17) for i in numpy.arange(10, 16, 0.5)]  # graph density comparison
+sizes = [(int(2**i),2**16) for i in numpy.arange(10, 15, 0.5)]  # graph density comparison
 #sizes = [(2**i,2**(i+1)) for i in range(8, 20)]  # graph size comparison
 
 def execute(algo, output_format, in_file):
@@ -25,7 +25,7 @@ def measure(algo):
         if not os.path.exists(in_file):
             with open(in_file, 'w') as f:
                 gendag.gengnm(n, m, f)
-        time = execute(algo, "count", in_file)
+        time = execute(algo, "matrix", in_file)
         print('%s %s %s %s' % (n, m, time, time / n))
 
 if __name__ == '__main__':

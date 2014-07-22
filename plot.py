@@ -18,8 +18,8 @@ def gen_dag(n, m):
 def init():
     global algorithms, sizes, graphs
     #algorithms = [("TLS", "count"), ("TLS", "array"), ("TLS", "matrix")]  # output format comparison:
-    algorithms = [(algo, "count") for algo in ["BFS", "DFS", "TLS", "TLS64"]] + [("WAR","matrix")]
-    sizes = [(int(2**i),2**17) for i in numpy.arange(10, 16, 0.5)]  # graph density comparison
+    algorithms = [(algo, "matrix") for algo in ["BFS", "DFS", "TLS", "TLS64", "WAR"]]
+    sizes = [(int(2**i),2**16) for i in numpy.arange(10, 15, 0.5)]  # graph density comparison
     #sizes = [(2**i,2**(i+1)) for i in range(8, 20)]  # graph size comparison
     graphs = [(n, gen_dag(n, m)) for n, m in sizes]
 
