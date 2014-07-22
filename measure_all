@@ -1,6 +1,10 @@
 #!/usr/bin/bash
-for algo in BFS DFS TLS TLS64 RecMerge
+[ $# -eq 1 ] || { echo 'Usage: measure_all <scenario>'; exit 1; }
+
+[ -e 'out/$1' ] || mkdir -p out/$1
+
+for algo in BFS DFS TLS TLS64 RecMerge RTLS
 do
   echo $algo
-  ./measure.py $algo | tee out/$algo.log
+  ./measure.py $1 $algo | tee out/$1/$algo
 done
