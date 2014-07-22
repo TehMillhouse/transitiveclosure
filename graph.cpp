@@ -65,19 +65,7 @@ void AdjacencyArrayGraph::writeGraph(std::ostream& out) {
   }
 }
 
-AdjacencyMatrixGraph::AdjacencyMatrixGraph(int n) {
-  adj = std::vector<std::vector<bool>>(n, std::vector<bool>(n));
-}
-
-void AdjacencyMatrixGraph::addEdge(int from, int to) {
-  adj[from][to] = true;
-}
-
-bool AdjacencyMatrixGraph::hasEdge(int from, int to)
-{
-	return adj[from][to];
-}
-
+AdjacencyMatrixGraph::AdjacencyMatrixGraph(int n) : adj(n, std::vector<uint64_t>(n / segment_size + (n % segment_size ? 1 : 0))) {}
 
 void AdjacencyMatrixGraph::writeGraph(std::ostream& out) {
   const int n = adj.size();
@@ -87,7 +75,7 @@ void AdjacencyMatrixGraph::writeGraph(std::ostream& out) {
   for (unsigned int i = 0; i < n; i++) {
     out << i << ": ";
     for (unsigned int j = 0; j < n; j++)
-      if (adj[i][j])
+      if (hasEdge(i, j))
         out << j << " ";
     out << "#" << std::endl;
   }

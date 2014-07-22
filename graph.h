@@ -15,6 +15,33 @@ struct Node {
   // edge indices [offset, offset + out) belong to this node
 };
 
+class AdjacencyMatrixGraph {
+private:
+  int currentNode = -1; // to emulate adjacency array API
+  const int segment_size = 64;
+public:
+  std::vector<std::vector<uint64_t>> adj;
+  AdjacencyMatrixGraph(int n);
+  void writeGraph(std::ostream&);
+
+  void pushNode() {
+    currentNode++;
+  }
+
+  void pushEdge(int dest) {
+    addEdge(currentNode, dest);
+  }
+
+  void addEdge(int from, int to) {
+    adj[from][to / segment_size] |= 1ul << (to % segment_size);
+  }
+
+  bool hasEdge(int from, int to)
+  {
+    return adj[from][to / segment_size] & (1ul << (to % segment_size));
+  }
+};
+
 class AdjacencyArrayGraph {
 public:
   void setLevel(Node&);
@@ -216,25 +243,6 @@ template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologic
   abort();
 }
 
-
-class AdjacencyMatrixGraph {
-private:
-  int currentNode = -1; // to emulate adjacency array API
-public:
-  std::vector<std::vector<bool>> adj;
-  AdjacencyMatrixGraph(int n);
-  void addEdge(int from, int to);
-	bool hasEdge(int from, int to);
-  void writeGraph(std::ostream&);
-
-  void pushNode() {
-    currentNode++;
-  }
-
-  void pushEdge(int dest) {
-    adj[currentNode][dest] = 1;
-  }
-};
 
 // graph stub that just counts added edges instead of storing them
 class CountingGraph {
