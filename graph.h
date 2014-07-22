@@ -187,6 +187,10 @@ public:
     return ret;
   }
 
+  template <class G> G* reverseTopologicalLevelSearch() {
+    abort();
+  }
+
   void pushNode() {
     Node v {};
     v.offset = edges.size();
@@ -267,6 +271,61 @@ template<> inline AdjacencyMatrixGraph* AdjacencyArrayGraph::recursiveMerge() {
       recursiveMergeAux(ret, v);
   return ret;
 }
+
+template<> inline AdjacencyMatrixGraph* AdjacencyArrayGraph::reverseTopologicalLevelSearch<AdjacencyMatrixGraph>() {
+  /*
+     reverse TLS
+  // compute reachable node as union of
+  // reachable nodes of immediate neighbors
+  Find topological levels
+  for each v in V do reached[v] := {} // stacks
+  For l:= L downto 1 do
+  For each v in level(l) do
+  reset reachedFlags // see b2
+  reached[v].push(v)
+  For each (v,u) in E do
+  For each w in reached[u] do
+  if not reachedFlag[w] then
+  reachedFlag[w] := 1
+  reached[v].push(w)
+  */
+
+  setTopologicalLevels();
+  std::vector<std::vector<Node*>> levelBuckets(levels);
+  std::priority_queue<int> mergeQueue;
+  for (Node &v : nodes) {
+    levelBuckets[v.level].push_back(&v);
+  }
+
+  AdjacencyMatrixGraph *ret = new AdjacencyMatrixGraph(nodes.size());
+  for (int l = levels; l > 0; l--) {
+    for (Node *n : levelBuckets[l-1]) {
+      mergeQueue = std::priority_queue<int>();
+      mergeQueue.push(n - &nodes[0]);  // reflexive-transitive closure
+      for (int i = 0; i < n->out; i++) {
+        int k = edges[n->offset + i];
+        for (int j = 0; j < nodes.size(); j++) {
+          if (ret->hasEdge(k,j)) {
+            mergeQueue.push(j);
+          }
+        }
+      }
+      for (int i = 0; i < n->out; i++) {
+        mergeQueue.push(edges[n->offset + i]);
+      }
+      while (!mergeQueue.empty()) {
+        int recent = mergeQueue.top();
+        while (mergeQueue.top() == recent && !mergeQueue.empty()) {
+          mergeQueue.pop();
+        }
+        ret->addEdge(n - &nodes[0], recent);
+      }
+
+    }
+  }
+  return ret;
+}
+
 
 // graph stub that just counts added edges instead of storing them
 class CountingGraph {

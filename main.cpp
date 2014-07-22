@@ -22,6 +22,8 @@ int exec(std::string algo) {
 		gOut = g->warshallALgorithm<G>();
   } else if (algo == "RecMerge") {
     gOut = g->recursiveMerge<G>();
+  } else if (algo == "RTLS") {
+    gOut = g->reverseTopologicalLevelSearch<G>();
 	} else {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
