@@ -236,6 +236,23 @@ public:
     }
     return ret;
   }
+
+  void recursiveMergeAux(AdjacencyMatrixGraph* g, int v) {
+    nodes[v].visited = true;
+    for (int i = 0; i < nodes[v].out; i++) {
+      int u = edges[nodes[v].offset + i];
+      if (!nodes[u].visited)
+        recursiveMergeAux(g, u);
+      // adj[v] |= adj[u];
+      for (int k = 0; k < g->adj[0].size(); k++)
+        g->adj[v][k] |= g->adj[u][k];
+    }
+    g->addEdge(v, v);
+  }
+
+  template<class G> G* recursiveMerge() {
+    abort();
+  }
 };
 
 template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch<AdjacencyArrayGraph>() {
@@ -243,6 +260,13 @@ template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologic
   abort();
 }
 
+template<> inline AdjacencyMatrixGraph* AdjacencyArrayGraph::recursiveMerge() {
+  AdjacencyMatrixGraph *ret = new AdjacencyMatrixGraph(nodes.size());
+  for (int v = 0; v < nodes.size(); v++)
+    if (!nodes[v].visited)
+      recursiveMergeAux(ret, v);
+  return ret;
+}
 
 // graph stub that just counts added edges instead of storing them
 class CountingGraph {
@@ -257,7 +281,7 @@ public:
 	bool hasEdge(int from, int to) {
 		abort();
 	}
-	
+
   void pushNode() {
     currentNode++;
   }

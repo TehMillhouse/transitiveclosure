@@ -4,7 +4,7 @@ import collections
 import sys
 import subprocess
 
-algorithms = ["BFS", "DFS", "TLS", "TLS64", "WAR"]
+algorithms = ["BFS", "DFS", "TLS", "TLS64", "WAR", "RecMerge"]
 
 def exec(algo, in_file):
     with open(in_file) as f:

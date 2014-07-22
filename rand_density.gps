@@ -8,4 +8,5 @@ plot\
  "out/DFS.log" using 1:3 title "DFS" with linespoints,\
  "out/BFS.log" using 1:3 title "BFS" with linespoints,\
  "out/TLS.log" using 1:3 title "TLS" with linespoints,\
- "out/TLS64.log" using 1:3 title "TLS64" with linespoints
+ "out/TLS64.log" using 1:3 title "TLS64" with linespoints,\
+ "out/RecMerge.log" using 1:3 title "RecMerge" with linespoints

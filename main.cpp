@@ -20,6 +20,8 @@ int exec(std::string algo) {
     gOut = g->bitParallelTopologicalLevelSearch<G>();
   } else if (algo == "WAR") {
 		gOut = g->warshallALgorithm<G>();
+  } else if (algo == "RecMerge") {
+    gOut = g->recursiveMerge<G>();
 	} else {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
