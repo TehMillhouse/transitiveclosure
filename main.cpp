@@ -4,7 +4,7 @@
 #include "graph.h"
 
 template <class G>
-int exec(std::string algo) {
+int exec(std::string algo, bool output) {
   AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
   g->readGraph(std::cin);
 
@@ -33,21 +33,23 @@ int exec(std::string algo) {
   std::cerr << g->nodes.size() << "  ";
   std::cerr << double(clock() - start) / CLOCKS_PER_SEC << std::endl;
 
-  gOut->writeGraph(std::cout);
+  if (output)
+    gOut->writeGraph(std::cout);
   return 0;
 }
 
 int main(int argc, char **argv) {
-  if (argc != 3) {
-    std::cout << "Usage: closure <algorithm> <output format>" << std::endl;
+  if (argc < 3 || argc > 4) {
+    std::cout << "Usage: closure <algorithm> <output format> [-no-output]" << std::endl;
     return 42;
   }
 
   std::string format = argv[2];
+  bool output = argc == 3;
   if (format == "count")
-    return exec<CountingGraph>(argv[1]);
+    return exec<CountingGraph>(argv[1], output);
   else if (format == "array")
-    return exec<AdjacencyArrayGraph>(argv[1]);
+    return exec<AdjacencyArrayGraph>(argv[1], output);
   else if (format == "matrix")
-    return exec<AdjacencyMatrixGraph>(argv[1]);
+    return exec<AdjacencyMatrixGraph>(argv[1], output);
 }
