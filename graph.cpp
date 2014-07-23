@@ -81,6 +81,21 @@ void AdjacencyMatrixGraph::writeGraph(std::ostream& out) {
   }
 }
 
+AdjacencyListGraph::AdjacencyListGraph(int n) : adj(n) {}
+
+void AdjacencyListGraph::writeGraph(std::ostream& out) {
+  const int n = adj.size();
+  out << "graph_for_greach" << std::endl;
+  out << n << std::endl;
+
+  for (unsigned int i = 0; i < n; i++) {
+    out << i << ": ";
+    for (int j : adj[i])
+      out << j << " ";
+    out << "#" << std::endl;
+  }
+}
+
 CountingGraph::CountingGraph(int n) {
   nodes.resize(n);
 }

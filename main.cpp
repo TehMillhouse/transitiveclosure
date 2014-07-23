@@ -52,4 +52,6 @@ int main(int argc, char **argv) {
     return exec<AdjacencyArrayGraph>(argv[1], output);
   else if (format == "matrix")
     return exec<AdjacencyMatrixGraph>(argv[1], output);
+  else if (format == "list")
+    return exec<AdjacencyListGraph>(argv[1], output);
 }
