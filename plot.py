@@ -14,7 +14,7 @@ def plot_files(files, titles):
     cmd = []
     output_png = False
     for i in range(len(files)):
-        cmd.append('"%s" using 1:3 title "%s" with linespoints' % (files[i], titles[i]))
+        cmd.append('"%s" using 1:4 title "%s" with linespoints' % (files[i], titles[i]))
     plot = subprocess.Popen(['gnuplot'], stdin=subprocess.PIPE)
     real_cmd =  ('set xtics (1024, 2048, 4096, 8192, 16384, 32768, 65536)\n'
                  'set ylabel "Time / Node [s]"\n'
