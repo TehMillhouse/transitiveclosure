@@ -18,7 +18,7 @@ def execute(algo, output_format, in_file):
     return_code = p.wait()
     if return_code:
         raise Exception("{} returned code {}".format(algo, return_code))
-    output = float(p.stderr.read().decode('utf-8').strip().split()[1][:-1])
+    output = float(p.stderr.read().decode('utf-8').strip().split()[1])
     return output
 
 def measure(scenario, algo):
