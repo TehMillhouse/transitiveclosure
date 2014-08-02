@@ -76,8 +76,11 @@ private:
   int currentNode = -1; // to emulate adjacency array API
 public:
   CountingGraph(int n);
-  void addEdge(int from, int to);
   void writeGraph(std::ostream&);
+
+  void addEdge(int from, int to) {
+    nodes[from]++;
+  }
 
 	bool hasEdge(int from, int to) {
 		abort();
@@ -124,7 +127,9 @@ public:
 		abort();
 	}
 
-	bool hasEdge(int from, int to);
+	bool hasEdge(int from, int to) {
+    abort();
+  }
 
   AdjacencyArrayGraph(int n) {}
 
@@ -132,10 +137,8 @@ public:
   G* warshallALgorithm() {
 		G * result = new G(nodes.size());
 		for(int i = 0; i < nodes.size(); i++) {
-			Node & v = nodes[i];
-			result->addEdge(i, i);
-			for(int l = v.offset; l < v.offset + v.out; l++) {
-				result->addEdge(i, edges[l]);
+			for(int j : successors(i)) {
+				result->addEdge(i, j);
 			}
 		}
 
@@ -185,27 +188,26 @@ public:
   template <class G>
   G* breadthFirstSearch() {
     G *ret = new G(nodes.size());
-    std::queue<Node*> queue;
-    std::vector<Node*> visited;
+    std::queue<int> queue;
+    std::vector<int> visited;
 
-    for (Node &s : nodes) {
+    for (int s = 0; s < nodes.size(); s++) {
       ret->pushNode();
-      queue.push(&s);
+      queue.push(s);
 
       while (queue.size()) {
-        Node *v = queue.front();
+        int v = queue.front();
         queue.pop();
-        ret->pushEdge(v - &nodes[0]);
-        for (int i = 0; i < v->out; i++) {
-          Node &u = nodes[edges[v->offset + i]];
-          if (!u.visited) {
-            queue.push(&u);
-            visited.push_back(&u);
-            u.visited = 1;
+        ret->pushEdge(v);
+        for (int u : successors(v)) {
+          if (!nodes[u].visited) {
+            queue.push(u);
+            visited.push_back(u);
+            nodes[u].visited = 1;
           }
         }
       }
-      for (Node *v : visited) v->visited = 0;
+      for (int v : visited) nodes[v].visited = 0;
       visited.clear();
     }
     return ret;
@@ -230,21 +232,20 @@ public:
     for (Node &v : nodes) v.visited = 0;
 
     G *ret = new G(nodes.size());
-    std::vector<std::vector<Node*>> next(levels);
+    std::vector<std::vector<int>> next(levels);
 
-    for (Node &s : nodes) {
+    for (int s = 0; s < nodes.size(); s++) {
       ret->pushNode();
-      next[s.level].push_back(&s);
+      next[nodes[s].level].push_back(s);
 
-      for (int l = s.level; l < levels; l++) {
-        for (Node *v : next[l]) {
-          v->visited = 0;
-          ret->pushEdge(v - &nodes[0]);
-          for (int i = 0; i < v->out; i++) {
-            Node &u = nodes[edges[v->offset + i]];
-            if (!u.visited) {
-              next[u.level].push_back(&u);
-              u.visited = 1;
+      for (int l = nodes[s].level; l < levels; l++) {
+        for (int v : next[l]) {
+          nodes[v].visited = 0;
+          ret->pushEdge(v);
+          for (int u : successors(v)) {
+            if (!nodes[u].visited) {
+              next[nodes[u].level].push_back(u);
+              nodes[u].visited = 1;
             }
           }
         }
@@ -271,31 +272,30 @@ public:
     const int segment_size = sizeof(Node::visited) * 8;
 
     G *ret = new G(nodes.size());
-    std::vector<std::vector<Node*>> next(levels);
+    std::vector<std::vector<int>> next(levels);
 
-    std::vector<std::vector<Node*>> levelBuckets(levels);
-    for (Node &v : nodes)
-      levelBuckets[v.level].push_back(&v);
+    std::vector<std::vector<int>> levelBuckets(levels);
+    for (int v = 0; v < nodes.size(); v++)
+      levelBuckets[nodes[v].level].push_back(v);
     for (auto &levelNodes : levelBuckets) {
       for (int segment = 0; segment < levelNodes.size(); segment += segment_size) {
-        int level = levelNodes[segment]->level;
+        int level = nodes[levelNodes[segment]].level;
         for (int i = 0; i < segment_size && segment + i < levelNodes.size(); i++) {
-          Node *v = levelNodes[segment+i];
-          v->visited = 1ull << i;
+          int v = levelNodes[segment+i];
+          nodes[v].visited = 1ull << i;
           next[level].push_back(v);
         }
         for (int l = level; l < levels; l++) {
-          for (Node *v : next[l]) {
-            for (int i = 0; i < v->out; i++) {
-              Node &u = nodes[edges[v->offset + i]];
-              if (!u.visited)
-                next[u.level].push_back(&u);
-              u.visited |= v->visited;
+          for (int v : next[l]) {
+            for (int u : successors(v)) {
+              if (!nodes[u].visited)
+                next[nodes[u].level].push_back(u);
+              nodes[u].visited |= nodes[v].visited;
             }
             for (int i = 0; i < segment_size; i++)
-              if ((1ull << i) & v->visited)
-                ret->addEdge(levelNodes[segment+i] - &nodes[0], v - &nodes[0]);
-            v->visited = 0;
+              if ((1ull << i) & nodes[v].visited)
+                ret->addEdge(levelNodes[segment+i], v);
+            nodes[v].visited = 0;
           }
           next[l].clear();
         }

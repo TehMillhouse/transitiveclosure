@@ -4,11 +4,11 @@ import collections
 import sys
 import subprocess
 
-algorithms = ["BFS", "DFS", "TLS", "TLS64", "WAR", "RTLS", "RecMerge"]
+algorithms = ["BFS", "DFS", "TLS", "RTLS", "RecMerge"]
 
 def exec(algo, in_file):
     with open(in_file) as f:
-        return subprocess.check_output(["./closure", algo, "matrix"], stdin=f).decode('ascii').split("\n")
+        return subprocess.check_output(["./closure", algo, "list"], stdin=f).decode('ascii').split("\n")
 
 output = [exec(algo, sys.argv[1]) for algo in algorithms]
 lengths = list(map(len, output))

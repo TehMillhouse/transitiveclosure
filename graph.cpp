@@ -100,10 +100,6 @@ CountingGraph::CountingGraph(int n) {
   nodes.resize(n);
 }
 
-void CountingGraph::addEdge(int from, int to) {
-  nodes[from]++;
-}
-
 void CountingGraph::writeGraph(std::ostream& out) {
   for (int edges : nodes)
     out << edges << " ";
