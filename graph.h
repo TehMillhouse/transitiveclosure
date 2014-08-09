@@ -75,6 +75,32 @@ public:
   }
 };
 
+// graph stub that just counts added edges instead of storing them
+class CountingGraph {
+private:
+  std::vector<int> nodes;
+  int currentNode = -1; // to emulate adjacency array API
+public:
+  CountingGraph(int n);
+  void writeGraph(std::ostream&);
+
+  void addEdge(int from, int to) {
+    nodes[from]++;
+  }
+
+	bool hasEdge(int from, int to) {
+		abort();
+	}
+
+  void pushNode() {
+    currentNode++;
+  }
+
+  void pushEdge(int dest) {
+    nodes[currentNode]++;
+  }
+};
+
 class AdjacencyArrayGraph {
 public:
   struct OutIterator {
@@ -107,7 +133,9 @@ public:
 		abort();
 	}
 
-	bool hasEdge(int from, int to);
+	bool hasEdge(int from, int to) {
+    abort();
+  }
 
   AdjacencyArrayGraph(int n) {}
 
@@ -274,10 +302,8 @@ public:
   G* warshallALgorithm() {
 		G * result = new G(nodes.size());
 		for(int i = 0; i < nodes.size(); i++) {
-			Node & v = nodes[i];
-			result->addEdge(i, i);
-			for(int l = v.offset; l < v.offset + v.out; l++) {
-				result->addEdge(i, edges[l]);
+			for(int j : successors(i)) {
+				result->addEdge(i, j);
 			}
 		}
 
@@ -327,27 +353,26 @@ public:
   template <class G>
   G* breadthFirstSearch() {
     G *ret = new G(nodes.size());
-    std::queue<Node*> queue;
-    std::vector<Node*> visited;
+    std::queue<int> queue;
+    std::vector<int> visited;
 
-    for (Node &s : nodes) {
+    for (int s = 0; s < nodes.size(); s++) {
       ret->pushNode();
-      queue.push(&s);
+      queue.push(s);
 
       while (queue.size()) {
-        Node *v = queue.front();
+        int v = queue.front();
         queue.pop();
-        ret->pushEdge(v - &nodes[0]);
-        for (int i = 0; i < v->out; i++) {
-          Node &u = nodes[edges[v->offset + i]];
-          if (!u.visited) {
-            queue.push(&u);
-            visited.push_back(&u);
-            u.visited = 1;
+        ret->pushEdge(v);
+        for (int u : successors(v)) {
+          if (!nodes[u].visited) {
+            queue.push(u);
+            visited.push_back(u);
+            nodes[u].visited = 1;
           }
         }
       }
-      for (Node *v : visited) v->visited = 0;
+      for (int v : visited) nodes[v].visited = 0;
       visited.clear();
     }
     return ret;
@@ -372,21 +397,20 @@ public:
     for (Node &v : nodes) v.visited = 0;
 
     G *ret = new G(nodes.size());
-    std::vector<std::vector<Node*>> next(levels);
+    std::vector<std::vector<int>> next(levels);
 
-    for (Node &s : nodes) {
+    for (int s = 0; s < nodes.size(); s++) {
       ret->pushNode();
-      next[s.level].push_back(&s);
+      next[nodes[s].level].push_back(s);
 
-      for (int l = s.level; l < levels; l++) {
-        for (Node *v : next[l]) {
-          v->visited = 0;
-          ret->pushEdge(v - &nodes[0]);
-          for (int i = 0; i < v->out; i++) {
-            Node &u = nodes[edges[v->offset + i]];
-            if (!u.visited) {
-              next[u.level].push_back(&u);
-              u.visited = 1;
+      for (int l = nodes[s].level; l < levels; l++) {
+        for (int v : next[l]) {
+          nodes[v].visited = 0;
+          ret->pushEdge(v);
+          for (int u : successors(v)) {
+            if (!nodes[u].visited) {
+              next[nodes[u].level].push_back(u);
+              nodes[u].visited = 1;
             }
           }
         }
@@ -394,10 +418,6 @@ public:
       }
     }
     return ret;
-  }
-
-  template <class G> G* reverseTopologicalLevelSearch() {
-    abort();
   }
 
   void pushNode() {
@@ -417,31 +437,30 @@ public:
     const int segment_size = sizeof(Node::visited) * 8;
 
     G *ret = new G(nodes.size());
-    std::vector<std::vector<Node*>> next(levels);
+    std::vector<std::vector<int>> next(levels);
 
-    std::vector<std::vector<Node*>> levelBuckets(levels);
-    for (Node &v : nodes)
-      levelBuckets[v.level].push_back(&v);
+    std::vector<std::vector<int>> levelBuckets(levels);
+    for (int v = 0; v < nodes.size(); v++)
+      levelBuckets[nodes[v].level].push_back(v);
     for (auto &levelNodes : levelBuckets) {
       for (int segment = 0; segment < levelNodes.size(); segment += segment_size) {
-        int level = levelNodes[segment]->level;
+        int level = nodes[levelNodes[segment]].level;
         for (int i = 0; i < segment_size && segment + i < levelNodes.size(); i++) {
-          Node *v = levelNodes[segment+i];
-          v->visited = 1ull << i;
+          int v = levelNodes[segment+i];
+          nodes[v].visited = 1ull << i;
           next[level].push_back(v);
         }
         for (int l = level; l < levels; l++) {
-          for (Node *v : next[l]) {
-            for (int i = 0; i < v->out; i++) {
-              Node &u = nodes[edges[v->offset + i]];
-              if (!u.visited)
-                next[u.level].push_back(&u);
-              u.visited |= v->visited;
+          for (int v : next[l]) {
+            for (int u : successors(v)) {
+              if (!nodes[u].visited)
+                next[nodes[u].level].push_back(u);
+              nodes[u].visited |= nodes[v].visited;
             }
             for (int i = 0; i < segment_size; i++)
-              if ((1ull << i) & v->visited)
-                ret->addEdge(levelNodes[segment+i] - &nodes[0], v - &nodes[0]);
-            v->visited = 0;
+              if ((1ull << i) & nodes[v].visited)
+                ret->addEdge(levelNodes[segment+i], v);
+            nodes[v].visited = 0;
           }
           next[l].clear();
         }
@@ -452,133 +471,70 @@ public:
 
   std::vector<int> reached;
 
-  void recursiveMergeAux(AdjacencyListGraph &g, int v) {
+  template<class G> void mergeSuccessors(G &g, int v) {
+    abort();
+  }
+
+  template<class G>
+  void recursiveMergeAux(G &g, int v) {
     nodes[v].visited = true;
     for (int u : successors(v))
       if (!nodes[u].visited)
         recursiveMergeAux(g, u);
-
-    for (int u : successors(v))
-      for (int w : g.adj[u])
-        if (!nodes[w].reached) {
-          nodes[w].reached = true;
-          reached.push_back(w);
-          g.addEdge(v, w);
-        }
-    g.addEdge(v, v);
-    for (int w : reached) nodes[w].reached = false;
-    reached.clear();
+    mergeSuccessors(g, v);
   }
 
-  void recursiveMergeAux(AdjacencyMatrixGraph &g, int v) {
-    nodes[v].visited = true;
-    for (int i = 0; i < nodes[v].out; i++) {
-      int u = edges[nodes[v].offset + i];
-      if (!nodes[u].visited)
-        recursiveMergeAux(g, u);
-      // adj[v] |= adj[u];
-      for (int k = 0; k < g.adj[0].size(); k++)
-        g.adj[v][k] |= g.adj[u][k];
-    }
-    g.addEdge(v, v);
-  }
-
-  template<class G> G* recursiveMerge() {
+  template<class G>
+  G* recursiveMerge() {
     G *ret = new G(nodes.size());
     for (int v = 0; v < nodes.size(); v++)
       if (!nodes[v].visited)
         recursiveMergeAux(*ret, v);
     return ret;
   }
+
+  template<class G>
+  G* reverseTopologicalLevelSearch() {
+    setTopologicalLevels();
+    std::vector<std::vector<int>> levelBuckets(levels);
+    for (Node &v : nodes) {
+      levelBuckets[v.level].push_back(&v-&nodes[0]);
+    }
+
+    G *ret = new G(nodes.size());
+    for (int l = levels-1; l >= 0; l--)
+      for (int v : levelBuckets[l])
+        mergeSuccessors(*ret, v);
+    return ret;
+  }
 };
 
-template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch<AdjacencyArrayGraph>() {
+template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch() {
   // no way to efficiently implement this
   abort();
 }
 
-template<> inline AdjacencyMatrixGraph* AdjacencyArrayGraph::reverseTopologicalLevelSearch<AdjacencyMatrixGraph>() {
-  /*
-     reverse TLS
-  // compute reachable node as union of
-  // reachable nodes of immediate neighbors
-  Find topological levels
-  for each v in V do reached[v] := {} // stacks
-  For l:= L downto 1 do
-  For each v in level(l) do
-  reset reachedFlags // see b2
-  reached[v].push(v)
-  For each (v,u) in E do
-  For each w in reached[u] do
-  if not reachedFlag[w] then
-  reachedFlag[w] := 1
-  reached[v].push(w)
-  */
-
-  setTopologicalLevels();
-  std::vector<std::vector<Node*>> levelBuckets(levels);
-  std::priority_queue<int> mergeQueue;
-  for (Node &v : nodes) {
-    levelBuckets[v.level].push_back(&v);
-  }
-
-  AdjacencyMatrixGraph *ret = new AdjacencyMatrixGraph(nodes.size());
-  for (int l = levels; l > 0; l--) {
-    for (Node *n : levelBuckets[l-1]) {
-      mergeQueue = std::priority_queue<int>();
-      mergeQueue.push(n - &nodes[0]);  // reflexive-transitive closure
-      for (int i = 0; i < n->out; i++) {
-        int k = edges[n->offset + i];
-        for (int j = 0; j < nodes.size(); j++) {
-          if (ret->hasEdge(k,j)) {
-            mergeQueue.push(j);
-          }
-        }
+template<> inline
+void AdjacencyArrayGraph::mergeSuccessors(AdjacencyListGraph &g, int v) {
+  for (int u : successors(v))
+    for (int w : g.adj[u])
+      if (!nodes[w].reached) {
+        nodes[w].reached = true;
+        reached.push_back(w);
+        g.addEdge(v, w);
       }
-      for (int i = 0; i < n->out; i++) {
-        mergeQueue.push(edges[n->offset + i]);
-      }
-      while (!mergeQueue.empty()) {
-        int recent = mergeQueue.top();
-        while (mergeQueue.top() == recent && !mergeQueue.empty()) {
-          mergeQueue.pop();
-        }
-        ret->addEdge(n - &nodes[0], recent);
-      }
+  g.addEdge(v, v);
 
-    }
-  }
-  return ret;
+  for (int w : reached) nodes[w].reached = false;
+  reached.clear();
 }
 
-
-// graph stub that just counts added edges instead of storing them
-class CountingGraph {
-private:
-  std::vector<int> nodes;
-  int currentNode = -1; // to emulate adjacency array API
-public:
-  CountingGraph(int n);
-  void addEdge(int from, int to);
-  void writeGraph(std::ostream&);
-
-	bool hasEdge(int from, int to) {
-		abort();
-	}
-
-  void pushNode() {
-    currentNode++;
+template<> inline
+void AdjacencyArrayGraph::mergeSuccessors(AdjacencyMatrixGraph &g, int v) {
+  for (int u : successors(v)) {
+    // adj[v] |= adj[u];
+    for (int k = 0; k < g.adj[0].size(); k++)
+      g.adj[v][k] |= g.adj[u][k];
   }
-
-  void pushEdge(int dest) {
-    nodes[currentNode]++;
-  }
-};
-
-template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::recursiveMerge() {
-  abort();
-}
-
-template<> inline CountingGraph* AdjacencyArrayGraph::recursiveMerge() {
-  abort();
+  g.addEdge(v, v);
 }

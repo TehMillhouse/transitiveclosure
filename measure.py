@@ -33,4 +33,5 @@ def measure(scenario, algo):
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage: measure.py <scenario> <algorithm>', file=sys.stderr)
+        sys.exit(1)
     measure(sys.argv[1], sys.argv[2])
