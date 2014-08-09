@@ -10,13 +10,13 @@ int exec(std::string algo, bool output) {
 
   G *gOut;
   clock_t start = clock();
-  if (algo == "BFS")
+  if (algo == "BFS") {
     gOut = g->breadthFirstSearch<G>();
-  else if (algo == "DFS")
+  } else if (algo == "DFS") {
     gOut = g->depthFirstSearch<G>();
-  else if (algo == "TLS")
+  } else if (algo == "TLS") {
     gOut = g->topologicalLevelSearch<G>();
-  else if (algo == "TLS64") {
+  } else if (algo == "TLS64") {
     gOut = g->bitParallelTopologicalLevelSearch<G>();
   } else if (algo == "WAR") {
 		gOut = g->warshallALgorithm<G>();
@@ -39,6 +39,47 @@ int exec(std::string algo, bool output) {
 }
 
 int main(int argc, char **argv) {
+  //hardcoded testing code for parallel algorithms.
+  /*
+  int size;
+  int cur;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &cur);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+
+  if(size < 2) {
+    MPI_Finalize();
+    std::cout << "Please select more than 1 Thread!" << std::endl;
+    return 42;
+  }
+
+  AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
+  
+  //each thread -> read the graph.
+  std::fstream f;
+  f.open("graphs/3.gra");
+  g->readGraph(f);
+  f.close();
+
+  //each thread generate one output-graph.   
+  AdjacencyMatrixGraph * gOut;
+
+  gOut = g->parallelBFS<AdjacencyMatrixGraph>(cur, size);
+  
+  if(cur == 0) {
+    gOut->writeGraph(std::cout);
+  }
+
+  delete gOut;  
+
+  MPI_Finalize();
+
+  return 0;
+  */
+
+  //old code.
+
   if (argc < 3 || argc > 4) {
     std::cout << "Usage: closure <algorithm> <output format> [-no-output]" << std::endl;
     return 42;
