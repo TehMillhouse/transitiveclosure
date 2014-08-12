@@ -221,18 +221,14 @@ public:
           for(int u : successors(v)) {
             result->addEdge(i, u);
 
-            if(!(*curVisited)[u]) {
+            //prove on current timestamp.
+            if( (*curVisited)[u] != i ) {
               curQueue->push(u);
-              (*curVisited)[u] = 1;
+              (*curVisited)[u] = i;
             }
           }
         }
-
-        for(int u = 0; u < curVisited->size(); u++) {
-          (*curVisited)[u] = 0;
-        } 
       } 
-      
     }
 
     return result;
