@@ -39,46 +39,27 @@ int exec(std::string algo, bool output) {
 }
 
 int main(int argc, char **argv) {
-  //hardcoded testing code for parallel algorithms.
   /*
-  int size;
-  int cur;
-
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &cur);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-  if(size < 2) {
-    MPI_Finalize();
-    std::cout << "Please select more than 1 Thread!" << std::endl;
-    return 42;
-  }
-
-  AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
+  int threads = atoi(argv[1]);
   
-  //each thread -> read the graph.
+  AdjacencyArrayGraph * g = new AdjacencyArrayGraph(0);
   std::fstream f;
-  f.open("graphs/3.gra");
+  f.open("graphs/2.gra");
   g->readGraph(f);
   f.close();
 
-  //each thread generate one output-graph.   
-  AdjacencyMatrixGraph * gOut;
+  std::cout << "old Graph:" << std::endl << std::endl;
+  g->writeGraph(std::cout);
 
-  gOut = g->parallelBFS<AdjacencyMatrixGraph>(cur, size);
-  
-  if(cur == 0) {
-    gOut->writeGraph(std::cout);
-  }
+    std::cout  << std::endl << std::endl  << std::endl << std::endl;
 
-  delete gOut;  
 
-  MPI_Finalize();
+  AdjacencyMatrixGraph * gOut = g->parallelBFS2<AdjacencyMatrixGraph>(threads);
 
-  return 0;
+  gOut->writeGraph(std::cout);
+
+  return 42;
   */
-
-  //old code.
 
   if (argc < 3 || argc > 4) {
     std::cout << "Usage: closure <algorithm> <output format> [-no-output]" << std::endl;
@@ -95,4 +76,5 @@ int main(int argc, char **argv) {
     return exec<AdjacencyMatrixGraph>(argv[1], output);
   else if (format == "list")
     return exec<AdjacencyListGraph>(argv[1], output);
+
 }

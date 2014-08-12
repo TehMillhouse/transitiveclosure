@@ -5,11 +5,9 @@
 #include <stack>
 #include <queue>
 #include <cstdlib>
-#include <math.h>
+#include <algorithm>
 
-#include <mpi.h>
-
-
+#include <omp.h>
 
 
 struct Node {
@@ -139,159 +137,102 @@ public:
 
   AdjacencyArrayGraph(int n) {}
 
-  template <class G>
-  G* parallelDFS(int cur, int size) {
-    //initialize MPI.
-    G * result = NULL; 
+  template <class G> 
+  G * parallelBFS(int threads) {
+    int maxThreads = threads;
+    if(maxThreads > nodes.size()) {
+      maxThreads = nodes.size();
+    } else if(maxThreads < 1) {
+      maxThreads = 1;
+    }
 
-    if(cur == 0) {
-      //thread that cllects all found edges from the other threads.
-      result = new G(nodes.size());
+    G * result = new G(nodes.size());
+    
+    double n = nodes.size();
+
+    omp_set_num_threads(maxThreads);
+
+    //parallel part.
+    #pragma omp parallel for 
+    for(int s = 0; s < nodes.size(); s++) {
       
-      int finished = 0;
+      std::queue<int> queue;
+      std::vector<int> visited(nodes.size());  
+      queue.push(s);
 
-      //When there are running threads, listen for new edges or finishing message.
-      while(finished < (size - 1)) {
-        int edge[2];
-        MPI_Recv(&edge, 2, MPI_INTEGER, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        
-        //check if message is new edge of finishing-message.
-        if(edge[0] != -1) {
-          result->addEdge(edge[0], edge[1]);
-        } else {
-          finished++;
-        }
-      }
+      while(queue.size()) {
+        int v = queue.front();
+        queue.pop();
 
-    } else {
-      double n = double(nodes.size());
-      //mapping of the nodes to the current thread.
-      int lowerBound = (cur - 1) * (n / (size - 1.0));
-      int upperBound = cur * (n / (size - 1.0));
-
-      std::stack<Node*> stack;
-      std::vector<Node*> visited;
-
-      for(int i = lowerBound; i < upperBound; i++) {
-        stack.push(&nodes[i]);
-
-        while(stack.size()) {
-          Node * v = stack.top();
-          stack.pop();
+        for(int u : successors(v)) {
+          result->addEdge(s, v);
           
-          int j = v - &nodes[0];
-          //new edge found! send to thread 0! 
-          int edge[2];
-          edge[0] = i;
-          edge[1] = j;
-          MPI_Ssend(&edge[0], 2, MPI_INTEGER, 0, 0, MPI_COMM_WORLD);
-          // 
-          
-          for(int j = 0; j < v->out; j++) {
-            Node &u = nodes[ edges[ v->offset + j ]];
-
-            if(!u.visited) {
-              stack.push(&u);
-              visited.push_back(&u);
-              u.visited = 1;
-            }
+          if(!visited[u]) {
+            queue.push(u);
+            visited[u] = 1;
           }
         }
-        
-        //reset 
-        for(Node *v : visited) {
-          v->visited = 0;
-        }
-
-        visited.clear();
       }
-      
-      //send signal that thread is finished.
-      int finished[2];
-      finished[0] = -1;
-      finished[1] = -1;
-      MPI_Send(&finished, 2, MPI_INTEGER, 0, 0, MPI_COMM_WORLD);
+
+      visited.clear();
     }
 
     return result;
-
-
-
   }
 
-
   template <class G>
-  G* parallelBFS(int cur, int size) {
-    //initialize MPI.
-    G * result = NULL; 
+  G * parallelBFS2(int threads) {
+    int maxThreads = threads;
 
-    if(cur == 0) {
-      //thread that cllects all found edges from the other threads.
-      result = new G(nodes.size());
-      
-      int finished = 0;
+    //check if number of threads makes sense.
+    if(maxThreads < 1) {
+      maxThreads = 1;
+    } else if(maxThreads > nodes.size()) {
+      maxThreads = nodes.size();
+    }
 
-      //When there are running threads, listen for new edges or finishing message.
-      while(finished < (size - 1)) {
-        int edge[2];
-        MPI_Recv(&edge, 2, MPI_INTEGER, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        
-        //check if message is new edge of finishing-message.
-        if(edge[0] != -1) {
-          result->addEdge(edge[0], edge[1]);
-        } else {
-          finished++;
-        }
-      }
+    G * result = new G(nodes.size());
 
-    } else {
-      double n = double(nodes.size());
-      //mapping of the nodes to the current thread.
-      int lowerBound = (cur - 1) * (n / (size - 1.0));
-      int upperBound = cur * (n / (size - 1.0));
+    //a visited-vector and a queue for each thread.
+    std::vector< std::vector<int> > visitedVec(maxThreads, std::vector<int>(nodes.size(), 0));
+    std::vector <std::queue<int> > queues(maxThreads, std::queue<int>());
 
-      std::queue<Node*> queue;
-      std::vector<Node*> visited;
+    omp_set_num_threads(maxThreads);
+    #pragma omp parallel
+    {
+      int cur = omp_get_thread_num();
 
+      double n = (double) nodes.size();
+      int lowerBound = cur * (n / maxThreads);
+      int upperBound = (cur + 1) * (n / maxThreads);
+
+      //queue and visited vector for the current thread..
+      std::queue<int> * curQueue = &queues[cur];
+      std::vector<int> * curVisited = &visitedVec[cur];
+
+      //for each node of the graph do a BFS in parallel.
       for(int i = lowerBound; i < upperBound; i++) {
-        queue.push(&nodes[i]);
+        curQueue->push(i);
+        
+        while(curQueue->size()) {
+          int v = curQueue->front();
+          curQueue->pop();
 
-        while(queue.size()) {
-          Node * v = queue.front();
-          queue.pop();
-          
-          int j = v - &nodes[0];
-          //new edge found! send to thread 0! 
-          int edge[2];
-          edge[0] = i;
-          edge[1] = j;
-          MPI_Ssend(&edge[0], 2, MPI_INTEGER, 0, 0, MPI_COMM_WORLD);
-          // 
-          
-          for(int j = 0; j < v->out; j++) {
-            Node &u = nodes[ edges[ v->offset + j ]];
+          for(int u : successors(v)) {
+            result->addEdge(i, u);
 
-            if(!u.visited) {
-              queue.push(&u);
-              visited.push_back(&u);
-              u.visited = 1;
+            if(!(*curVisited)[u]) {
+              curQueue->push(u);
+              (*curVisited)[u] = 1;
             }
           }
         }
-        
-        //reset 
-        for(Node *v : visited) {
-          v->visited = 0;
-        }
 
-        visited.clear();
-      }
+        for(int u = 0; u < curVisited->size(); u++) {
+          (*curVisited)[u] = 0;
+        } 
+      } 
       
-      //send signal that thread is finished.
-      int finished[2];
-      finished[0] = -1;
-      finished[1] = -1;
-      MPI_Send(&finished, 2, MPI_INTEGER, 0, 0, MPI_COMM_WORLD);
     }
 
     return result;

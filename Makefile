@@ -1,13 +1,10 @@
 CPPFLAGS=-std=gnu++11 -O3 -march=native *.cpp
 
 all:
-	g++ $(CPPFLAGS) -o closure
-
-mpi:
-	mpic++ $(CPPFLAGS) -o closure
+	g++ $(CPPFLAGS) -fopenmp -o closure
 
 debug:
-	g++ $(CPPFLAGS) -g -o closure
+	g++ $(CPPFLAGS) -g -fopenmp -o closure
 
 asm:
 	g++ -S -g0 $(CPPFLAGS)
