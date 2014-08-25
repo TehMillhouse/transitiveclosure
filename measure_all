@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 [ $# -eq 1 ] || { echo 'Usage: measure_all <scenario>'; exit 1; }
 
 [ -e 'out/$1' ] || mkdir -p out/$1

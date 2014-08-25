@@ -262,27 +262,31 @@ public:
   template <class G>
   G* depthFirstSearch() {
     G *ret = new G(nodes.size());
-    std::stack<int> stack;
-    std::vector<int> visited;
+    #pragma omp parallel
+    {
+        std::stack<int> stack;
+        std::vector<int> visited;
+        std::vector<bool> visited_flag(nodes.size());
 
-    for (int s = 0; s < nodes.size(); s++) {
-      ret->pushNode();
-      stack.push(s);
+        #pragma omp for schedule(static)
+        for (int s = 0; s < nodes.size(); s++) {
+          stack.push(s);
 
-      while (stack.size()) {
-        int v = stack.top();
-        stack.pop();
-        ret->pushEdge(v);
-        for (int u : successors(v)) {
-          if (!nodes[u].visited) {
-            stack.push(u);
-            visited.push_back(u);
-            nodes[u].visited = 1;
+          while (stack.size()) {
+            int v = stack.top();
+            stack.pop();
+            ret->addEdge(s, v);
+            for (int u : successors(v)) {
+              if (!visited_flag[u]) {
+                stack.push(u);
+                visited.push_back(u);
+                visited_flag[u] = true;
+              }
+            }
           }
+          for (int v : visited) visited_flag[v] = false;
+          visited.clear();
         }
-      }
-      for (int v : visited) nodes[v].visited = 0;
-      visited.clear();
     }
     return ret;
   }

@@ -7,6 +7,7 @@ template <class G>
 int exec(std::string algo, bool output) {
   AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
   g->readGraph(std::cin);
+  std::cerr << g->nodes.size() << "  ";
 
   G *gOut;
   clock_t start = clock();
@@ -30,7 +31,6 @@ int exec(std::string algo, bool output) {
   }
   // output format feasible for gnuplot:
   // <#nodes>  <time / #nodes>
-  std::cerr << g->nodes.size() << "  ";
   std::cerr << double(clock() - start) / CLOCKS_PER_SEC << std::endl;
 
   if (output)
@@ -68,6 +68,7 @@ int main(int argc, char **argv) {
 
   std::string format = argv[2];
   bool output = argc == 3;
+  std::cerr << argv[1] << "  " << format << "  ";
   if (format == "count")
     return exec<CountingGraph>(argv[1], output);
   else if (format == "array")

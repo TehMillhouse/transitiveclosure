@@ -6,11 +6,11 @@ import subprocess
 
 algorithms = ["BFS", "DFS", "TLS", "RTLS", "RecMerge"]
 
-def exec(algo, in_file):
+def ex(algo, in_file):
     with open(in_file) as f:
         return subprocess.check_output(["./closure", algo, "list"], stdin=f).decode('ascii').split("\n")
 
-output = [exec(algo, sys.argv[1]) for algo in algorithms]
+output = [ex(algo, sys.argv[1]) for algo in algorithms]
 lengths = list(map(len, output))
 if len(set(lengths)) != 1:
     print("Differing output line counts: {}".format(lengths))
