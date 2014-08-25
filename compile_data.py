@@ -8,7 +8,7 @@ import time
 import sys
 
 
-algos = ['BFS','DFS','TLS','TLS64','WAR','RecMerge','RTLS']
+algos = ['BFS','paraBFS','paraBFS2','DFS','TLS','TLS64','WAR','RecMerge','RTLS']
 fmts = ['count','array','matrix','list']
 
 stop = False
