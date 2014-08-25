@@ -3,6 +3,8 @@
 #include <ctime>
 #include "graph.h"
 
+int threads = 8;
+
 template <class G>
 int exec(std::string algo, bool output) {
   AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
@@ -13,6 +15,10 @@ int exec(std::string algo, bool output) {
   clock_t start = clock();
   if (algo == "BFS") {
     gOut = g->breadthFirstSearch<G>();
+  } else if (algo == "paraBFS") {
+    gOut = g->parallelBFS<G>(threads);
+  } else if (algo == "paraBFS2") {
+    gOut = g->parallelBFS2<G>(threads);
   } else if (algo == "DFS") {
     gOut = g->depthFirstSearch<G>();
   } else if (algo == "TLS") {
@@ -61,13 +67,20 @@ int main(int argc, char **argv) {
   return 42;
   */
 
-  if (argc < 3 || argc > 4) {
-    std::cout << "Usage: closure <algorithm> <output format> [-no-output]" << std::endl;
+  if (argc < 3) {
+    std::cout << "Usage: closure <algorithm> <output format> [<num-threads>] [-no-output]" << std::endl;
     return 42;
+  }
+  
+  if (argc > 3 && atol(argv[3]) > 0) {
+    threads = atol(argv[3]);
   }
 
   std::string format = argv[2];
-  bool output = argc == 3;
+  bool output = true;
+  if (argv[3] == "-no-output" || argv[4] == "-no-output") {
+    output = false;
+  }
   std::cerr << argv[1] << "  " << format << "  ";
   if (format == "count")
     return exec<CountingGraph>(argv[1], output);
