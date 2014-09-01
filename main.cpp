@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
-#include <ctime>
+#include <chrono>
+#include <omp.h>
 #include "graph.h"
 
 template <class G>
@@ -9,7 +10,7 @@ int exec(std::string algo, bool output) {
   g->readGraph(std::cin);
 
   G *gOut;
-  clock_t start = clock();
+  auto start = std::chrono::high_resolution_clock::now();
   if (algo == "BFS") {
     gOut = g->breadthFirstSearch<G>();
   } else if (algo == "paraBFS") {
@@ -30,10 +31,11 @@ int exec(std::string algo, bool output) {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
   }
+  auto end = std::chrono::high_resolution_clock::now();
   // output format feasible for gnuplot:
   // <#nodes>  <time / #nodes>
   std::cerr << g->nodes.size() << "  ";
-  std::cerr << double(clock() - start) / CLOCKS_PER_SEC << std::endl;
+  std::cerr << std::chrono::duration<double>(end-start).count() << std::endl;
 
   if (output)
     gOut->writeGraph(std::cout);
