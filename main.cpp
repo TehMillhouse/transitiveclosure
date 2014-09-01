@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 
   std::string format = argv[2];
   bool output = true;
-  if (argv[3] == "-no-output" || argv[4] == "-no-output") {
+  if ((argc == 4 && std::string(argv[3]) == "-no-output") || (argc == 5 && std::string(argv[4]) == "-no-output")) {
     output = false;
   }
   std::cerr << argv[1] << "  " << format << "  ";
