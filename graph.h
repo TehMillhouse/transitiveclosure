@@ -137,103 +137,36 @@ public:
 
   AdjacencyArrayGraph(int n) : levels(0) {}
 
-  template <class G> 
-  G * parallelBFS(int threads) {
-    int maxThreads = threads;
-    if(maxThreads > nodes.size()) {
-      maxThreads = nodes.size();
-    } else if(maxThreads < 1) {
-      maxThreads = 1;
-    }
-
-    G * result = new G(nodes.size());
-    
-    double n = nodes.size();
-
-    omp_set_num_threads(maxThreads);
-
-    //parallel part.
-    #pragma omp parallel for 
-    for(int s = 0; s < nodes.size(); s++) {
-      
-      std::queue<int> queue;
-      std::vector<int> visited(nodes.size());  
-      queue.push(s);
-
-      while(queue.size()) {
-        int v = queue.front();
-        queue.pop();
-
-        for(int u : successors(v)) {
-          result->addEdge(s, v);
-          
-          if(!visited[u]) {
-            queue.push(u);
-            visited[u] = 1;
-          }
-        }
-      }
-
-      visited.clear();
-    }
-
-    return result;
-  }
-
   template <class G>
-  G * parallelBFS2(int threads) {
-    int maxThreads = threads;
-
-    //check if number of threads makes sense.
-    if(maxThreads < 1) {
-      maxThreads = 1;
-    } else if(maxThreads > nodes.size()) {
-      maxThreads = nodes.size();
-    }
-
+  G * parallelBFS() {
     G * result = new G(nodes.size());
 
-    //a visited-vector and a queue for each thread.
-    std::vector< std::vector<int> > visitedVec(maxThreads, std::vector<int>(nodes.size(), 0));
-    std::vector <std::queue<int> > queues(maxThreads, std::queue<int>());
-
-    omp_set_num_threads(maxThreads);
     #pragma omp parallel
     {
-      int cur = omp_get_thread_num();
+      std::queue<int> queue;
+      std::vector<int> visited(nodes.size(), -1);
 
-      double n = (double) nodes.size();
-      int lowerBound = cur * (n / maxThreads);
-      int upperBound = (cur + 1) * (n / maxThreads);
+      #pragma omp for schedule(static)
+      for(int s = 0; s < nodes.size(); s++) {
+        queue.push(s);
 
-      //queue and visited vector for the current thread..
-      std::queue<int> * curQueue = &queues[cur];
-      std::vector<int> * curVisited = &visitedVec[cur];
-
-      //for each node of the graph do a BFS in parallel.
-      for(int i = lowerBound; i < upperBound; i++) {
-        curQueue->push(i);
-        
-        while(curQueue->size()) {
-          int v = curQueue->front();
-          curQueue->pop();
+        while(queue.size()) {
+          int v = queue.front();
+          queue.pop();
+          result->addEdge(s, v);
 
           for(int u : successors(v)) {
-            result->addEdge(i, u);
-
-            //prove on current timestamp.
-            if( (*curVisited)[u] != i ) {
-              curQueue->push(u);
-              (*curVisited)[u] = i;
+            if(visited[u] != s) {
+              queue.push(u);
+              visited[u] = s;
             }
           }
         }
-      } 
+      }
     }
 
     return result;
   }
-
 
   template <class G>
   G* warshallALgorithm() {

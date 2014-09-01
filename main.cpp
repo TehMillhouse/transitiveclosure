@@ -3,8 +3,6 @@
 #include <ctime>
 #include "graph.h"
 
-int threads = 8;
-
 template <class G>
 int exec(std::string algo, bool output) {
   AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
@@ -15,9 +13,7 @@ int exec(std::string algo, bool output) {
   if (algo == "BFS") {
     gOut = g->breadthFirstSearch<G>();
   } else if (algo == "paraBFS") {
-    gOut = g->parallelBFS<G>(threads);
-  } else if (algo == "paraBFS2") {
-    gOut = g->parallelBFS2<G>(threads);
+    gOut = g->parallelBFS<G>();
   } else if (algo == "DFS") {
     gOut = g->depthFirstSearch<G>();
   } else if (algo == "TLS") {
@@ -73,7 +69,7 @@ int main(int argc, char **argv) {
   }
   
   if (argc > 3 && atol(argv[3]) > 0) {
-    threads = atol(argv[3]);
+    omp_set_num_threads(atol(argv[3]));
   }
 
   std::string format = argv[2];
