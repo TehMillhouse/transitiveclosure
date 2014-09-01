@@ -135,7 +135,7 @@ public:
     abort();
   }
 
-  AdjacencyArrayGraph(int n) {}
+  AdjacencyArrayGraph(int n) : levels(0) {}
 
   template <class G> 
   G * parallelBFS(int threads) {
