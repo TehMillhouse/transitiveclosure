@@ -43,28 +43,6 @@ int exec(std::string algo, bool output) {
 }
 
 int main(int argc, char **argv) {
-  /*
-  int threads = atoi(argv[1]);
-  
-  AdjacencyArrayGraph * g = new AdjacencyArrayGraph(0);
-  std::fstream f;
-  f.open("graphs/2.gra");
-  g->readGraph(f);
-  f.close();
-
-  std::cout << "old Graph:" << std::endl << std::endl;
-  g->writeGraph(std::cout);
-
-    std::cout  << std::endl << std::endl  << std::endl << std::endl;
-
-
-  AdjacencyMatrixGraph * gOut = g->parallelBFS2<AdjacencyMatrixGraph>(threads);
-
-  gOut->writeGraph(std::cout);
-
-  return 42;
-  */
-
   if (argc < 3) {
     std::cout << "Usage: closure <algorithm> <output format> [<num-threads>] [-no-output]" << std::endl;
     return 42;
