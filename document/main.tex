@@ -1,0 +1,106 @@
+\documentclass[12pt,a4paper,twoside]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{amsmath}
+\usepackage{algorithm, algpseudocode}
+
+\DeclareMathOperator*{\argmin}{\arg\!\min}
+
+\begin{document}
+
+\title{Fast Transitive Closure Computation}
+\author{Max Wagner \and Sebastian Ullrich \and Tobias Fleck}
+\date{August 2014}
+\maketitle
+
+\def\sectionautorefname{Section}
+\def\subsectionautorefname{Subsection}
+
+\newcommand\ie{i.e.\ }
+\newcommand\eg{e.g.\ }
+\newcommand\credits[1]{\begin{flushright}\emph{#1}\end{flushright}}
+
+\begin{abstract}
+  In this paper, we discuss and evaluate various algorithms for computing the transitive closure of a directed acyclic graph. The algorithms are implemented on top of a generic, template-based framework to make them independent from the input and output representation, where possible.
+\end{abstract}
+
+\section{Introduction}
+
+\section{The Graph Framework}
+
+\section{Basic Algorithms}
+\credits{Floyd-Warshall: Tobias Fleck \\ BFS, DFS, TLS: Sebastian Ullrich}
+
+Both breadth-first search (BFS) and depth-first search (DFS) are well-known algorithms for computing the graph reachability starting from a single source node. Topological level search (TLS) can be regarded as a variant of BFS where nodes are visited in order of increasing topological level. A pseudo code implementation is shown in Algorithm~\ref{algo:TLS}.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function{TLS}{s}
+      \State find topological levels
+      \State $next[level(s)] \gets \{s\}$
+      \For{$l \gets level(s), maxLevel$}
+        \For{$u \in next[l]$}
+          \State $visited[u] \gets false$
+          \For{$v \in V, (u,v) \in E$}
+            \If{$\neg visited[v]$}
+              \State $visited[v] \gets true$
+              \State $reached[s, v] \gets true$
+              \State $next[level(v)] \gets next[level(v)] \cup \{v\}$
+            \EndIf
+          \EndFor
+        \EndFor
+        \State $next[l] \gets \emptyset$ \Comment Optimization: reset for next invocation
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+  \caption{Topological Level Search}
+  \label{algo:TLS}
+\end{algorithm}
+
+By separately computing reachability for each node in the graph, these single-source algorithms can compute the transitive closure in $\mathcal{O}(n(n+m))$. As a small optimization, we can avoid having to reset the whole $visited$ array by saving the reached nodes in a list in addition to the $reached$ bit array and explicitly resetting only those nodes. This is even easier for TLS, as evidenced by Algorithm~\ref{algo:TLS}, because a node cannot be reached any more once it has been visited.
+
+\section{Bit-Parallel TLS}
+
+As a first optimization over the single-source algorithms, we can reduce the expected number of graph traversals by generalizing the algorithms to traverse a whole set $S$ of start nodes at the same time; Algorithm~\ref{algo:MultiTLS} shows such a straightforward extension for TLS. Selecting the nodes in $S$ from the same topological level is a good heuristics for finding nodes whose reachable subgraphs overlap maximally. If we furthermore restrict the size of $S$ to the hardware word size $w$, we can efficiently implement the set operations on $visited$ by native bitwise operations, yielding a \emph{bit-parallel} implementation.
+
+Note, however, that while this reduces the set operations to constant time, the loop iterating over all set bits of $visited[u]$ still needs $w$ iterations. So for sparse graphs there is a non-negligible overhead even though the rest of the algorithm graciously degrades to the single-source implementation in that situation. Even for adjacency matrix outputs, we cannot simplify the loop to a constant-time word move since choosing $S$ from topological levels means its nodes will in general not be contiguous in the output matrix. As a potential future extension, one could allow algorithms to permute the order of nodes in the output in order to implement this optimization.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \Function{TLS}{S}
+      \State find topological levels
+      \For{$s \in S$}
+        \State $next[level(s)] \gets next[level(s)] \cup \{s\}$
+        \State $visited[s] \gets \{s\}$
+      \EndFor
+      \For{$l \gets \argmin_{s \in S} level(s), maxLevel$}
+        \For{$u \in next[l]$}
+          \For{$s \in visited[u]$}
+            \State $reached[s, u] \gets true$
+          \EndFor
+          \State $visited[u] \gets \emptyset$
+          \For{$v \in V, (u,v) \in E$}
+            \If{$visited[v] = \emptyset$}
+              \State $next[level(v)] \gets next[level(v)] \cup \{v\}$
+            \EndIf
+            \State $visited[v] \gets visited[v] \cup visited[u]$
+          \EndFor
+        \EndFor
+        \State $next[l] \gets \emptyset$ \Comment Optimization: reset for next invocation
+      \EndFor
+    \EndFunction
+  \end{algorithmic}
+  \caption{Multi-Source TLS}
+  \label{algo:MultiTLS}
+\end{algorithm}
+\section{Reverse TLS}
+
+\section{Parallelized Implementations}
+
+\section{Evaluation}
+
+\section{Conclusion}
+
+\end{document}

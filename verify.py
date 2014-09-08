@@ -4,7 +4,7 @@ import collections
 import sys
 import subprocess
 
-algorithms = ["BFS", "DFS", "TLS", "RTLS", "RecMerge"]
+algorithms = ["BFS", "paraBFS", "DFS", "TLS", "RTLS", "RecMerge"]
 
 def ex(algo, in_file):
     with open(in_file) as f:

@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
-#include <ctime>
+#include <chrono>
+#include <omp.h>
 #include "graph.h"
 
 int threads = 8;
@@ -12,13 +13,11 @@ int exec(std::string algo, bool output) {
   std::cerr << g->nodes.size() << "  ";
 
   G *gOut;
-  clock_t start = clock();
+  auto start = std::chrono::high_resolution_clock::now();
   if (algo == "BFS") {
     gOut = g->breadthFirstSearch<G>();
   } else if (algo == "paraBFS") {
-    gOut = g->parallelBFS<G>(threads);
-  } else if (algo == "paraBFS2") {
-    gOut = g->parallelBFS2<G>(threads);
+    gOut = g->parallelBFS<G>();
   } else if (algo == "DFS") {
     gOut = g->depthFirstSearch<G>();
   } else if (algo == "TLS") {
@@ -35,9 +34,11 @@ int exec(std::string algo, bool output) {
     std::cout << "Unknown algorithm" << std::endl;
     return 43;
   }
+  auto end = std::chrono::high_resolution_clock::now();
   // output format feasible for gnuplot:
   // <#nodes>  <time / #nodes>
-  std::cerr << double(clock() - start) / CLOCKS_PER_SEC << std::endl;
+  std::cerr << g->nodes.size() << "  ";
+  std::cerr << std::chrono::duration<double>(end-start).count() << std::endl;
 
   if (output)
     gOut->writeGraph(std::cout);
@@ -45,40 +46,18 @@ int exec(std::string algo, bool output) {
 }
 
 int main(int argc, char **argv) {
-  /*
-  int threads = atoi(argv[1]);
-  
-  AdjacencyArrayGraph * g = new AdjacencyArrayGraph(0);
-  std::fstream f;
-  f.open("graphs/2.gra");
-  g->readGraph(f);
-  f.close();
-
-  std::cout << "old Graph:" << std::endl << std::endl;
-  g->writeGraph(std::cout);
-
-    std::cout  << std::endl << std::endl  << std::endl << std::endl;
-
-
-  AdjacencyMatrixGraph * gOut = g->parallelBFS2<AdjacencyMatrixGraph>(threads);
-
-  gOut->writeGraph(std::cout);
-
-  return 42;
-  */
-
   if (argc < 3) {
     std::cout << "Usage: closure <algorithm> <output format> [<num-threads>] [-no-output]" << std::endl;
     return 42;
   }
   
   if (argc > 3 && atol(argv[3]) > 0) {
-    threads = atol(argv[3]);
+    omp_set_num_threads(atol(argv[3]));
   }
 
   std::string format = argv[2];
   bool output = true;
-  if (argv[3] == "-no-output" || argv[4] == "-no-output") {
+  if ((argc == 4 && std::string(argv[3]) == "-no-output") || (argc == 5 && std::string(argv[4]) == "-no-output")) {
     output = false;
   }
   std::cerr << argv[1] << "  " << format << "  ";
