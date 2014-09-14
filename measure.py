@@ -14,7 +14,7 @@ sizes = {
 
 def execute(algo, output_format, in_file):
     with open(in_file) as f:
-        p = subprocess.Popen(["./closure", algo, output_format, "-no-output"], stdin=f, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        p = subprocess.Popen(["./closure", algo, output_format, "-iterations", "10", "-no-output"], stdin=f, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     return_code = p.wait()
     if return_code:
         raise Exception("{} returned code {}".format(algo, return_code))
@@ -27,7 +27,7 @@ def measure(scenario, algo):
         if not os.path.exists(in_file):
             with open(in_file, 'w') as f:
                 gendag.gengnm(n, m, f)
-        time = execute(algo, "matrix", in_file)
+        time = execute(algo, "list", in_file)
         print('%s %s %s %s' % (n, m, time, time / n))
 
 if __name__ == '__main__':
