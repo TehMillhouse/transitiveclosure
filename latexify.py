@@ -14,19 +14,22 @@ breaking it apart later.
 
 import json
 import pprint
+import sys
 
 # table format:
 
 algos = ['BFS','paraBFS','DFS','TLS','TLS64','WAR','RecMerge','RTLS']
-fmts = ['count','array','matrix','list']
+fmts = ['array','matrix','list']
 
-table_start = """\\begin{tabular}{ | l | c | %s | }
+table_start = """\\adjustbox{max width=\columnwidth}{
+\\begin{tabular}{ l | c %s }
   Graph & $n$ & %s \\\\
     \hline
     \hline
-    """ % (' | '.join(['c' for _ in algos]), ' & '.join(algos))
+    """ % (' '.join(['c' for _ in algos]), ' & '.join(algos))
 
 table_end = """  \end{tabular}
+}
 """
 
 data = {}
@@ -58,27 +61,63 @@ def get_data():
             tmp = line.split()
             data[name][tmp[0]][tmp[1]] = float(tmp[2])
             line = inf.readline()
+    # calculate which (algorithm, output) pair was fastest
+    # yes, I'm a dirty hackjob.
+    for graph in data:
+        fastest_time = 999999
+        for algo in algos:
+            for fmt in fmts:
+                # print(type(data[graph][algo][fmt]), file=sys.stderr)
+                print('???', graph, algo, fmt, file=sys.stderr)
+                if type(data[graph][algo][fmt]) is float and data[graph][algo][fmt] < fastest_time:
+                    data[graph]['fastest'] = (algo, fmt)
+                    print('   ', graph, algo, fmt, file=sys.stderr)
+                    fastest_time = data[graph][algo][fmt]
     return data
         # pprint.pprint(json.dumps(data['large_real/citeseer.gra']), width=99999)
 
+def get_cell_text(graph, algo, fmt):
+    if data[graph][algo][fmt] == 'N/A':
+        return '\\verb|N/A|'
+    string = '%.5f' % data[graph][algo][fmt]
+    if 'fastest' in data[graph] and data[graph]['fastest'] == (algo, fmt):
+        # print(data[graph]['fastest'], file=sys.stderr)
+        return '\\textbf{%s}' % string
+    return string
+
 row_tmpl = '\\verb|%s| & %s & %s & %s & %s & %s & %s & %s & %s & %s \\\\'
-def get_table():
+def get_tables(graphs_per_table=None):
     print(table_start)
-    for name in data:
+    graph_type = ''
+    i = 0
+    for name in sorted(list(data)):
 #       X | n | m | <algorithms>
 # <graph> |   |   |
+        if graphs_per_table and i >= graphs_per_table:
+            print(table_end)
+            print(table_start)
+            graph_type = ''
+            i = 0
+        graph = name.split('/')[-1][:-4]
+        newtype = name.split('/')[-2]
+        if newtype != graph_type:
+            # emit a section header
+            print('\\multicolumn{%s}{l}{\\textbf{%s}} \\\\' % (len(algos) + 2, newtype.replace('_',' ')))
+            print('\hline')
+        graph_type = newtype
 
-        graph = name
         n = data[name]['n']
         for fmt in fmts:
-            print(row_tmpl % ( (graph, n) + tuple([('%.5f' % data[name][algo][fmt]) if data[name][algo][fmt] != 'N/A' else '\\verb|N/A|' for algo in algos ]) ) )
+
+            print(row_tmpl % ( (graph, n) + tuple([get_cell_text(name, algo, fmt) for algo in algos ]) ) )
             graph = ' '
             n = ''
             m = ''
         print('\hline')
+        i += 1
     print(table_end)
 
 
 if __name__ == '__main__':
     get_data()
-    get_table()
+    get_tables(graphs_per_table=16)

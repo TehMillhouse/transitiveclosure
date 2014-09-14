@@ -4,9 +4,9 @@
 import os
 
 run_files = filter(lambda x : x.startswith('run_'), os.listdir())
-buf = []
 
 for f in run_files:
+    buf = []
     with open(f, 'r') as inf:
         with open('o_' + f, 'w') as outf:
             for line in inf:
