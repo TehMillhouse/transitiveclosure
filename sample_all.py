@@ -31,18 +31,18 @@ def term_after_timeout(subproc, timeout):
       print("<return code %s> : " % subproc.returncode, end='')
   sys.stdout.flush()
 
-def result(algo, fmt, data):
+def result(algo, fmt, data, iterations):
   global stop
   try:
     with open(data) as infile:
-      p = subprocess.Popen(['./closure', algo, fmt, '-no-output'],stdin=infile, stderr=subprocess.PIPE)
-      t = threading.Thread(target=term_after_timeout, args=[p,20])
+      p = subprocess.Popen(['./closure', algo, fmt, '-iterations', str(iterations), '-no-output'],stdin=infile, stderr=subprocess.PIPE)
+      t = threading.Thread(target=term_after_timeout, args=[p,20*iterations])
       t.start()
       p.wait()
       stop = True
       t.join()
       stop = False
-      result = p.stderr.read()
+      result = p.stderr.read().decode('utf-8')
       return data + ' ' + result
   except subprocess.CalledProcessError:
     # we expect this in many cases, just ignore it.
@@ -165,5 +165,5 @@ def graphs2():
 for fmt in fmts:
   for algo in algos:
     for graph in graphs2():
-      print(result(algo, fmt, graph))
+      print(result(algo, fmt, graph, 3))
       sys.stdout.flush()

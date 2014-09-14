@@ -13,6 +13,7 @@ breaking it apart later.
 
 
 import json
+import os
 import pprint
 import sys
 
@@ -32,6 +33,28 @@ table_end = """  \end{tabular}
 }
 """
 
+
+run_files = filter(lambda x : x.startswith('run_'), os.listdir())
+
+def cleanup(line):
+    if line == '\n' or line.startswith('<return code') or line == 'Unknown algorithm\n' or line.startswith('<timeout'):
+        return None
+    else:
+        return line
+
+
+def group(lines):
+    outf = []
+    lastgraph = ''
+    for line in sorted(lines):
+        parts = line.split()
+        if lastgraph != parts[0]:
+            outf.append('[' + parts[0] + '|' + parts[3] + ']\n')
+            lastgraph = parts[0]
+        outf.append(' '.join([parts[1],parts[2], parts[4]]) + '\n')
+    return outf
+
+
 data = {}
 
 def newgraph():
@@ -43,24 +66,19 @@ def newgraph():
             data[a][fmt] = 'N/A'
     return data
 
-def get_data():
+
+def parse_data(lines):
     global data
-    with open('average_grouped', 'r') as inf:
-        line = inf.readline()
-        while line:
-            if line.startswith('['):
-                tmp = line[1:-2].split('|')
-                name = tmp[0]
-                n = tmp[1]
-                m = tmp[2]
-                data[name] = newgraph()
-                data[name]['n'] = n
-                data[name]['m'] = m
-                line = inf.readline()
-                continue
-            tmp = line.split()
-            data[name][tmp[0]][tmp[1]] = float(tmp[2])
-            line = inf.readline()
+    for line in lines:
+        if line.startswith('['):
+            tmp = line[1:-2].split('|')
+            name = tmp[0]
+            n = tmp[1]
+            data[name] = newgraph()
+            data[name]['n'] = n
+            continue
+        tmp = line.split()
+        data[name][tmp[0]][tmp[1]] = float(tmp[2])
     # calculate which (algorithm, output) pair was fastest
     # yes, I'm a dirty hackjob.
     for graph in data:
@@ -68,13 +86,13 @@ def get_data():
         for algo in algos:
             for fmt in fmts:
                 # print(type(data[graph][algo][fmt]), file=sys.stderr)
-                print('???', graph, algo, fmt, file=sys.stderr)
                 if type(data[graph][algo][fmt]) is float and data[graph][algo][fmt] < fastest_time:
                     data[graph]['fastest'] = (algo, fmt)
-                    print('   ', graph, algo, fmt, file=sys.stderr)
                     fastest_time = data[graph][algo][fmt]
     return data
         # pprint.pprint(json.dumps(data['large_real/citeseer.gra']), width=99999)
+
+
 
 def get_cell_text(graph, algo, fmt):
     if data[graph][algo][fmt] == 'N/A':
@@ -84,6 +102,8 @@ def get_cell_text(graph, algo, fmt):
         # print(data[graph]['fastest'], file=sys.stderr)
         return '\\textbf{%s}' % string
     return string
+
+
 
 row_tmpl = '\\verb|%s| & %s & %s & %s & %s & %s & %s & %s & %s & %s \\\\'
 def get_tables(graphs_per_table=None):
@@ -119,5 +139,12 @@ def get_tables(graphs_per_table=None):
 
 
 if __name__ == '__main__':
-    get_data()
+    buf = []
+    for f in run_files:
+        for l in open(f, 'r'):
+            l = cleanup(l)
+            if l:
+                buf.append(l)
+    buf = group(buf)
+    parse_data(buf)
     get_tables(graphs_per_table=16)
