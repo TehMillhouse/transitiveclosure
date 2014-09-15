@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
 #include <chrono>
+#include <memory>
 #include <omp.h>
 #include "graph.h"
 
@@ -9,7 +10,7 @@ int exec(std::string algo, bool output, int iterations) {
   AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
   g->readGraph(std::cin);
 
-  G *gOut;
+  std::unique_ptr<G> gOut;
   auto start = std::chrono::high_resolution_clock::now();
   for (int i = 0; i < iterations; i++) {
     if (algo == "BFS") {

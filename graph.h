@@ -6,6 +6,7 @@
 #include <queue>
 #include <cstdlib>
 #include <algorithm>
+#include <memory>
 
 #include <omp.h>
 
@@ -138,8 +139,8 @@ public:
   AdjacencyArrayGraph(int n) : levels(0) {}
 
   template <class G>
-  G * parallelBFS() {
-    G * result = new G(nodes.size());
+  std::unique_ptr<G> parallelBFS() {
+    std::unique_ptr<G> result(new G(nodes.size()));
 
     #pragma omp parallel
     {
@@ -169,8 +170,8 @@ public:
   }
 
   template <class G>
-  G* warshallALgorithm() {
-		G * result = new G(nodes.size());
+  std::unique_ptr<G> warshallALgorithm() {
+    std::unique_ptr<G> result(new G(nodes.size()));
 		for(int i = 0; i < nodes.size(); i++) {
 			for(int j : successors(i)) {
 				result->addEdge(i, j);
@@ -193,8 +194,8 @@ public:
 	}
 
   template <class G>
-  G* depthFirstSearch() {
-    G *ret = new G(nodes.size());
+  std::unique_ptr<G> depthFirstSearch() {
+    std::unique_ptr<G> ret(new G(nodes.size()));
     std::stack<int> stack;
     std::vector<int> visited;
 
@@ -221,8 +222,8 @@ public:
   }
 
   template <class G>
-  G* breadthFirstSearch() {
-    G *ret = new G(nodes.size());
+  std::unique_ptr<G> breadthFirstSearch() {
+    std::unique_ptr<G> ret(new G(nodes.size()));
     std::queue<int> queue;
     std::vector<int> visited;
 
@@ -249,7 +250,7 @@ public:
   }
 
   template <class G>
-  G* topologicalLevelSearch() {
+  std::unique_ptr<G> topologicalLevelSearch() {
     //TLS
     //Find topological levels
     //Foreach s in V do
@@ -266,7 +267,7 @@ public:
     setTopologicalLevels();
     for (Node &v : nodes) v.visited = 0;
 
-    G *ret = new G(nodes.size());
+    std::unique_ptr<G> ret(new G(nodes.size()));
     std::vector<std::vector<int>> next(levels);
 
     for (int s = 0; s < nodes.size(); s++) {
@@ -301,12 +302,12 @@ public:
     nodes[nodes.size()-1].out++;
   }
 
-  template<class G> G* bitParallelTopologicalLevelSearch() {
+  template<class G> std::unique_ptr<G> bitParallelTopologicalLevelSearch() {
     setTopologicalLevels();
     for (Node &v : nodes) v.visited = 0;
     const int segment_size = sizeof(Node::visited) * 8;
 
-    G *ret = new G(nodes.size());
+    std::unique_ptr<G> ret(new G(nodes.size()));
     std::vector<std::vector<int>> next(levels);
 
     std::vector<std::vector<int>> levelBuckets(levels);
@@ -355,8 +356,8 @@ public:
   }
 
   template<class G>
-  G* recursiveMerge() {
-    G *ret = new G(nodes.size());
+  std::unique_ptr<G> recursiveMerge() {
+    std::unique_ptr<G> ret(new G(nodes.size()));
     for (int v = 0; v < nodes.size(); v++)
       if (!nodes[v].visited)
         recursiveMergeAux(*ret, v);
@@ -364,14 +365,14 @@ public:
   }
 
   template<class G>
-  G* reverseTopologicalLevelSearch() {
+  std::unique_ptr<G> reverseTopologicalLevelSearch() {
     setTopologicalLevels();
     std::vector<std::vector<int>> levelBuckets(levels);
     for (Node &v : nodes) {
       levelBuckets[v.level].push_back(&v-&nodes[0]);
     }
 
-    G *ret = new G(nodes.size());
+    std::unique_ptr<G> ret(new G(nodes.size()));
     for (int l = levels-1; l >= 0; l--)
       for (int v : levelBuckets[l])
         mergeSuccessors(*ret, v);
@@ -379,7 +380,7 @@ public:
   }
 };
 
-template<> inline AdjacencyArrayGraph* AdjacencyArrayGraph::bitParallelTopologicalLevelSearch() {
+template<> inline std::unique_ptr<AdjacencyArrayGraph> AdjacencyArrayGraph::bitParallelTopologicalLevelSearch() {
   // no way to efficiently implement this
   abort();
 }
