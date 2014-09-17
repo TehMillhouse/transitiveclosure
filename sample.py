@@ -21,7 +21,7 @@ def print_result(algo, fmt, graph):
             if p.returncode:
                 ret[0] = "MEM" if 'bad_alloc' in stderr else "ALGO"
             else:
-                ret[0] = ' '.join(stderr.split()[2:])
+                ret[0] = stderr.split()[3]
         t = threading.Thread(target=run)
         t.start()
 
