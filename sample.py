@@ -11,48 +11,28 @@ import os
 import time
 import sys
 
-algos = ['BFS','paraBFS','DFS','TLS','TLS64','WAR','RecMerge','RTLS']
-fmts = ['count','array','matrix','list']
+def print_result(algo, fmt, graph, iterations):
+    with open(graph) as infile:
+        p = subprocess.Popen(['./closure', algo, fmt, '-iterations', str(iterations), '-no-output'], stdin=infile, stderr=subprocess.PIPE)
+        ret = None
+        def run():
+            nonlocal ret
+            p.wait()
+            stderr = p.stderr.read().decode('utf8')
+            if p.returncode:
+                ret = "MEM" if 'bad_alloc' in stderr else "ALGO"
+            else:
+                ret = ' '.join(stderr.split()[2:])
+        t = threading.Thread(target=run)
+        t.start()
 
-stop = False
+        t.join(20)
+        if ret is None:
+            p.terminate()
+            t.join()
+            ret = "TIME"
 
-def term_after_timeout(subproc, timeout):
-  global stop
-  for _ in range(timeout * 2):
-    time.sleep(0.5)
-    if stop:
-      break
-  if subproc.poll() is None:
-    # hasn't exited yet
-    subproc.terminate()
-    print("<timeout> : ", end='')
-  else:
-    if subproc.returncode:
-      print("<return code %s> : " % subproc.returncode, end='')
-  sys.stdout.flush()
-
-def result(algo, fmt, data, iterations):
-  global stop
-  try:
-    with open(data) as infile:
-      p = subprocess.Popen(['./closure', algo, fmt, '-iterations', str(iterations), '-no-output'],stdin=infile, stderr=subprocess.PIPE)
-      t = threading.Thread(target=term_after_timeout, args=[p,20*iterations])
-      t.start()
-      p.wait()
-      stop = True
-      t.join()
-      stop = False
-      result = p.stderr.read().decode('utf-8')
-      return data + ' ' + result
-  except subprocess.CalledProcessError:
-    # we expect this in many cases, just ignore it.
-    return ""
-
-def graphs():
-  for root, _, files in os.walk('data'):
-    for f in files:
-      if f.endswith('.gra'):
-        yield os.path.join(root, f)
+        print(graph + ' ' + fmt + ' ' + ret)
 
 # these are all graphs "small" enough for us to have any chance of executing in
 # a reasonable time frame
@@ -156,14 +136,13 @@ safe_graphs = [
 "data/rand10k/rand10k4.gra",
 ]
 
-def graphs2():
-  # laziness enabling function
-  for i in safe_graphs:
-    yield i
 
-
-for fmt in fmts:
-  for algo in algos:
-    for graph in graphs2():
-      print(result(algo, fmt, graph, 3))
-      sys.stdout.flush()
+if __name__ == '__main__':
+    if len(sys.argv) == 0:
+        print('Usage: sample.py <algorithm> <formats*>', file=sys.stderr)
+        sys.exit(1)
+    for fmt in sys.argv[2:]:
+        for graph in safe_graphs:
+            if os.path.exists(graph):
+                print_result(sys.argv[1], fmt, graph, 10)
+                sys.stdout.flush()
