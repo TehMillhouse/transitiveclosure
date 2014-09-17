@@ -11,9 +11,9 @@ import os
 import time
 import sys
 
-def print_result(algo, fmt, graph, iterations):
+def print_result(algo, fmt, graph):
     with open(graph) as infile:
-        p = subprocess.Popen(['./closure', algo, fmt, '-iterations', str(iterations), '-no-output'], stdin=infile, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['./closure', algo, fmt, '-seconds', '3', '-no-output'], stdin=infile, stderr=subprocess.PIPE)
         ret = None
         def run():
             nonlocal ret
@@ -144,5 +144,5 @@ if __name__ == '__main__':
     for fmt in sys.argv[2:]:
         for graph in safe_graphs:
             if os.path.exists(graph):
-                print_result(sys.argv[1], fmt, graph, 10)
+                print_result(sys.argv[1], fmt, graph)
                 sys.stdout.flush()

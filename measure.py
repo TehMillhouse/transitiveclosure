@@ -14,7 +14,7 @@ sizes = {
 
 def execute(algo, output_format, in_file):
     with open(in_file) as f:
-        p = subprocess.Popen(["./closure", algo, output_format, "-iterations", "10", "-no-output"], stdin=f, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        p = subprocess.Popen(["./closure", algo, output_format, "-seconds", "3", "-no-output"], stdin=f, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
     return_code = p.wait()
     if return_code:
         raise Exception("{} returned code {}".format(algo, return_code))
