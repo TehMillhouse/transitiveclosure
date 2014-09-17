@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+set -e
+
+mkdir -p out/sample
+
+while read algo formats
+do
+  echo $algo
+  ./sample.py $algo $formats | tee out/sample/$algo
+done < algorithms
