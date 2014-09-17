@@ -6,7 +6,7 @@
 #include "graph.h"
 
 template <class G>
-int exec(std::string algo, bool output, int seconds) {
+int exec(std::string algo, bool output, double seconds) {
   AdjacencyArrayGraph *g = new AdjacencyArrayGraph(0);
   g->readGraph(std::cin);
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
   }
 
   std::string format = argv[2];
-  int seconds = 0;
+  double seconds = 0;
   bool output = true;
 
   for (int i = 3; i < argc; i++) {
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     if (arg == "-threads") {
       omp_set_num_threads(atoi(argv[++i]));
     } else if (arg == "-seconds") {
-      seconds = atoi(argv[++i]);
+      seconds = atof(argv[++i]);
     } else if (arg == "-no-output") {
       output = false;
     } else {

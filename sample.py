@@ -13,26 +13,25 @@ import sys
 
 def print_result(algo, fmt, graph):
     with open(graph) as infile:
-        p = subprocess.Popen(['./closure', algo, fmt, '-seconds', '3', '-no-output'], stdin=infile, stderr=subprocess.PIPE)
-        ret = None
+        p = subprocess.Popen(['./closure', algo, fmt, '-seconds', '0.1', '-no-output'], stdin=infile, stderr=subprocess.PIPE)
+        ret = [None]
         def run():
-            nonlocal ret
             p.wait()
             stderr = p.stderr.read().decode('utf8')
             if p.returncode:
-                ret = "MEM" if 'bad_alloc' in stderr else "ALGO"
+                ret[0] = "MEM" if 'bad_alloc' in stderr else "ALGO"
             else:
-                ret = ' '.join(stderr.split()[2:])
+                ret[0] = ' '.join(stderr.split()[2:])
         t = threading.Thread(target=run)
         t.start()
 
-        t.join(20)
-        if ret is None:
+        t.join(10)
+        if ret[0] is None:
             p.terminate()
             t.join()
-            ret = "TIME"
+            ret[0] = "TIME"
 
-        print(graph + ' ' + fmt + ' ' + ret)
+        print(graph + ' ' + fmt + ' ' + ret[0])
 
 # these are all graphs "small" enough for us to have any chance of executing in
 # a reasonable time frame
