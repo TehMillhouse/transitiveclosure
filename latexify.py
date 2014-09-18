@@ -9,12 +9,12 @@ import collections
 
 # table format:
 
-algos = os.listdir('out/sample')
+algos = sorted(os.listdir('out/sample'))
 fmts = ['matrix','array','list']
 
 table_start = """\\adjustbox{max width=\columnwidth}{
-\\begin{tabular}{ l | c %s }
-  Graph & $n$ & %s \\\\
+\\begin{tabular}{ l c c | %s }
+  Graph & $n$ & $m$ & %s \\\\
     \hline
     \hline
     """ % (' '.join(['c' for _ in algos]), ' & '.join(algos))
@@ -23,10 +23,14 @@ table_end = """  \end{tabular}
 }
 """
 
-Graph = collections.namedtuple('Graph', ['samples', 'fastest', 'n', 'm'])
+class Graph(object):
+    def __init__(self):
+        self.n = 0
+        self.m = 0
+        self.samples = {}
 
 def parse_graph(path):
-    g = Graph(samples={}, n=0, m=0, fastest=None)
+    g = Graph()
     with open(path, 'r') as f:
         f.readline()
         f.readline()
@@ -50,7 +54,7 @@ def parse_data(algo, lines):
             g.samples[(algo, fmt)] = res
 
     for g in graphs.values():
-        g.fastest = min(time for time in g.samples.values() if type(time) is float)
+        g.fastest = min([1000] + [time for time in g.samples.values() if type(time) is float])
 
 def get_cell_text(graph, algo, fmt):
     res = graphs[graph].samples.get((algo, fmt), '-')
@@ -81,14 +85,13 @@ def get_tables(graphs_per_table=None):
         newtype = name.split('/')[-2]
         if newtype != graph_type:
             # emit a section header
-            print('\\multicolumn{%s}{l}{\\textbf{%s}} \\\\' % (len(algos) + 2, newtype.replace('_',' ')))
+            print('\\multicolumn{%s}{l}{\\textbf{%s}} \\\\' % (len(algos) + 3, newtype.replace('_',' ')))
             print('\hline')
         graph_type = newtype
 
-        for fmt in fmts:
-            print(r'\verb|%s| & %s \\' % (graph, ' & '.join([g.n, g.m] + [get_cell_text(name, algo, fmt) for algo in algos])))
-            graph = ' '
-            n = ''
+        print(r'\verb|%s| & %s \\' % (graph, ' & '.join([str(g.n), str(g.m)] + [get_cell_text(name, algo, fmts[0]) for algo in algos])))
+        for fmt in fmts[1:]:
+            print(r'%s \\' % ' & '.join(3 * [''] + [get_cell_text(name, algo, fmt) for algo in algos]))
         print('\hline')
         i += 1
     print(table_end)
