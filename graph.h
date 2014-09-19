@@ -358,6 +358,9 @@ public:
   template<class G>
   std::unique_ptr<G> recursiveMerge() {
     std::unique_ptr<G> ret(new G(nodes.size()));
+    for (int v = 0; v < nodes.size(); v++) {
+      nodes[v].visited = false;
+    }
     for (int v = 0; v < nodes.size(); v++)
       if (!nodes[v].visited)
         recursiveMergeAux(*ret, v);
