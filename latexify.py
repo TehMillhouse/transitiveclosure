@@ -9,7 +9,7 @@ import collections
 
 # table format:
 
-algos = sorted(os.listdir('out/sample'))
+algos = [line.split()[0] for line in open('algorithms').readlines()]
 fmts = ['matrix','array','list']
 
 table_start = """\\adjustbox{max width=\columnwidth}{
