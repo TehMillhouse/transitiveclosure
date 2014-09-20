@@ -25,9 +25,10 @@ class AdjacencyMatrixGraph {
 private:
   int currentNode = -1; // to emulate adjacency array API
   const int segment_size = 64;
+  std::vector<uint64_t> adj; // n x col_size
 public:
-  std::vector<std::vector<uint64_t>> adj;
   AdjacencyMatrixGraph(int n);
+  int col_size;
   void writeGraph(std::ostream&);
 
   void pushNode() {
@@ -39,12 +40,15 @@ public:
   }
 
   void addEdge(int from, int to) {
-    adj[from][to / segment_size] |= 1ul << (to % segment_size);
+    adj[col_size * from + to / segment_size] |= 1ul << (to % segment_size);
   }
 
-  bool hasEdge(int from, int to)
-  {
-    return adj[from][to / segment_size] & (1ul << (to % segment_size));
+  bool hasEdge(int from, int to) {
+    return adj[col_size * from + to / segment_size] & (1ul << (to % segment_size));
+  }
+
+  uint64_t* rawCol(int col) {
+    return &adj[col_size * col];
   }
 };
 
@@ -406,9 +410,10 @@ void AdjacencyArrayGraph::mergeSuccessors(AdjacencyListGraph &g, int v) {
 template<> inline
 void AdjacencyArrayGraph::mergeSuccessors(AdjacencyMatrixGraph &g, int v) {
   for (int u : successors(v)) {
-    // adj[v] |= adj[u];
-    for (int k = 0; k < g.adj[0].size(); k++)
-      g.adj[v][k] |= g.adj[u][k];
+    // col[v] |= col[u];
+    for (int k = 0; k < g.col_size; k++) {
+      g.rawCol(v)[k] |= g.rawCol(u)[k];
+    }
   }
   g.addEdge(v, v);
 }

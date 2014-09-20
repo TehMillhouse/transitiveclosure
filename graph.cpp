@@ -65,7 +65,7 @@ void AdjacencyArrayGraph::writeGraph(std::ostream& out) {
   }
 }
 
-AdjacencyMatrixGraph::AdjacencyMatrixGraph(int n) : adj(n, std::vector<uint64_t>(n / segment_size + (n % segment_size ? 1 : 0))) {}
+AdjacencyMatrixGraph::AdjacencyMatrixGraph(int n) : col_size(n / segment_size + 1), adj((size_t)n * (n / segment_size + 1)) {}
 
 void AdjacencyMatrixGraph::writeGraph(std::ostream& out) {
   const int n = adj.size();
