@@ -20,7 +20,7 @@
 \def\subsectionautorefname{Subsection}
 
 \newcommand\ie{i.e.\ }
-\newcommand\eg{e.g.\ }
+\newcommand\eg{e.g.,\ }
 \newcommand\credits[1]{\begin{flushright}\emph{#1}\end{flushright}}
 
 \begin{abstract}
@@ -30,6 +30,24 @@
 \section{Introduction}
 
 \section{The Graph Framework}
+
+While an adjacency matrix is the most natural representation of transitive closures since it can answer reachability queries in constant time, its size of $n^2$ bits can quickly outgrow a computer's main memory, even though the closure itself may be relatively sparse for realistic inputs. For this reason, we decided to implement adjacency lists and arrays as additional output formats and make the implementations independent of the actual format by use of C++ templates. Naturally, not every algorithm can be implemented for every output format, as will be noted below.
+
+\subsection{Adjacency Array}
+
+The \verb|AdjacencyArrayGraph| class stores its edges' target nodes in a contiguous array. Each node references a range in that array as its outgoing edges.
+
+In order to fill an instance of \verb|AdjacencyArrayGraph|, one uses its method \verb|void pushNode()| to add a new node, followed by zero or more invocations of \verb|void pushEdge(int v)| to add its outgoing edges. While this strictly sequential interface is the most restrictive one, it also guarantees a minimum of cache misses for constructing the output graph. Likewise, it could be trivially extended into a semi-external algorithm (where only the input graph has to fit in memory) by writing the output directly to disk.
+
+\subsection{Adjacency List}
+
+The \verb|AdjacencyListGraph| class hold a separate array of outgoing edges per node. In addition to \verb|AdjcacencyArrayGraph|'s interface, it supports the method \verb|void addEdge(int u, int v)| for non-sequential (\eg parallel) construction of the output graph.
+
+\subsection{Adjacency Matrix}
+
+The \verb|AdjacencyMatrixGraph| stores adjacency data in an $n \times n$ bit matrix. In addition to the interfaces mentioned above, it supports methods \verb|bool hasEdge(int u, int v)| and \verb|void setEdge(int u, int v)| for direct access to the matrix.
+
+Specifically, the matrix is encoded as a column-major contiguous array of \verb|uint64_t|s holding adjacency information of 64 target nodes (including padding, if necessary). This allows fast bit-wise operations on whole columns via the method \verb|uint64_t* rawCol(int u)|.
 
 \section{Basic Algorithms}
 \credits{Floyd-Warshall: Tobias Fleck \\ BFS, DFS, TLS: Sebastian Ullrich}
