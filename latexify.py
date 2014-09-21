@@ -12,7 +12,8 @@ import collections
 algos = [line.split()[0] for line in open('algorithms').readlines()]
 fmts = ['matrix','array','list']
 
-table_start = """\\adjustbox{max width=\columnwidth}{
+table_start = """\\begin{table}
+\\adjustbox{max width=\columnwidth}{
 \\begin{tabular}{ l c c | %s }
   Graph & $n$ & $m$ & %s \\\\
     \hline
@@ -21,7 +22,15 @@ table_start = """\\adjustbox{max width=\columnwidth}{
 
 table_end = """  \end{tabular}
 }
+\end{table}
 """
+caption = """Experimental average runtimes of the tested graph instances in seconds. For each graph instance and each algorithm, the table lists processing times for the internal graph representation as adjacency matrix, adjacency array and adjacency list in that order. A value of \\texttt{TIME} signifies that the computation timed out after 10 seconds; a value of \\texttt{MEM} signifies the test machine ran out of memory."""
+table_end_caption = """  \end{tabular}
+}
+\caption{%s}
+\label{results}
+\end{table}
+""" % caption
 
 class Graph(object):
     def __init__(self):
@@ -94,7 +103,7 @@ def get_tables(graphs_per_table=None):
             print(r'%s \\' % ' & '.join(3 * [''] + [get_cell_text(name, algo, fmt) for algo in algos]))
         print('\hline')
         i += 1
-    print(table_end)
+    print(table_end_caption)
 
 def main():
     for f in algos:
