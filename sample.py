@@ -137,7 +137,7 @@ safe_graphs = [
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 0:
+    if len(sys.argv) < 3:
         print('Usage: sample.py <algorithm> <formats*>', file=sys.stderr)
         sys.exit(1)
     for fmt in sys.argv[2:]:
