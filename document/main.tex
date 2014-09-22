@@ -121,16 +121,27 @@ Note, however, that while this reduces the set operations to constant time, the 
          RecMerge: Sebastian Ullrich \\
          RTLS: Max Wagner}
 
-\subsection{RecMerge}
-
-% TODO(max): specify recmerge
-
 \subsection{Reverse TLS}
 
 One major drawback of TLS is that it simply iterates over all nodes, completely ignoring any information about topological levels. In the implementation discussed above, it is thus forced to walk the same parts of the graph many times. Reverse Topological Level Search is an alternate formulation of TLS which avoids this problem by iterating over nodes in reverse topological order; This way, by the time the algorithm processes a node, the transitive closure of all of its successors have already been computed, and the algorithm only needs to merge these intermediate results to obtain the transitive closure for the node. Algorithm~\ref{algo:RTLS} shows an implementation in pseudo code.
 
-\begin{algorithm}
+\begin{algorithm}[h]
   \begin{algorithmic}
+    \Function{RTLS}{V}
+    \State find topological levels
+    \For{$n \in V$}  % oh god, I hate pseudocode
+      \State $bucket[level(n)] \gets bucket[level(n)] \cup \{n\}$
+    \EndFor
+    \State $E' \gets \{(n,n) \mid n \in V\}$
+
+    \For{$level \gets maxLevel$ \textbf{down to} $0$}
+      \For{$n \in bucket[level]$}
+        \State $E' \gets \Call{MergeSuccessors}{E, E', n}$
+      \EndFor
+    \EndFor
+    \State \Return $(V, E')$
+    \EndFunction
+    \\
     \Function{MergeSuccessors}{E, E', n}
       \For{$(n,s) \in E$}
       \Comment For each successor $s$ of $n$...
@@ -144,24 +155,39 @@ One major drawback of TLS is that it simply iterates over all nodes, completely 
       \EndFor
       \State \Return $E'$
     \EndFunction
-    \\
-    \Function{RTLS}{S}
-    \State find topological levels
-    \For{$s \in S$}  % oh god, I hate pseudocode
-      \State $bucket[level(s)] \gets bucket[level(s)] \cup \{s\}$
-    \EndFor
-    \State $E' \gets \{(n,n) \mid n \in V\}$
-
-    \For{$level \gets maxLevel$ \textbf{down to} $0$}
-      \For{$n \in bucket[level]$}
-        \State $E' \gets \Call{MergeSuccessors}{E, E', n}$
-      \EndFor
-    \EndFor
-    \State \Return $(V, E')$
-    \EndFunction
   \end{algorithmic}
   \caption{Reverse TLS}
   \label{algo:RTLS}
+\end{algorithm}
+
+\subsection{RecMerge}
+
+The Recursive Merge algorithm works through much of the same mechanisms as RTLS, except that instead of explicitly determining topological levels and processing the nodes according to the resulting schedule, RecMerge performs this calculation implicitly by recursing on each node's successors. Algorithm~\ref{algo:RecMerge} shows a pseudo code implementation which uses the procedure \verb|MergeSuccessors| introduced in Algorithm~\ref{algo:RTLS} (RTLS).
+
+\begin{algorithm}[h]
+\begin{algorithmic}
+  \Function{RecursiveMerge}{V}
+    \State $E' \gets \{(n, n) \mid n \in V \}$
+    \For{$n \in V$}
+      \If{$\neg visited[n]$}
+        \State $E' \gets \Call{RecursiveMergeAux}{E, E', s}$
+      \EndIf
+    \EndFor
+    \State \Return $E'$
+  \EndFunction
+  \\
+  \Function{RecursiveMergeAux}{E, E', n}
+    \State $visited[n] \gets true$
+    \For{$(n, s) \in E$}
+      \If{$\neg visited[s]$}
+        \State $E' \gets \Call{RecursiveMergeAux}{E, E', s}$
+      \EndIf
+    \EndFor
+    \State $\Return \Call{MergeSuccessors}{E, E', n}$
+  \EndFunction
+\end{algorithmic}
+\caption{Recursive Merge}
+\label{algo:RecMerge}
 \end{algorithm}
 
 \section{Parallelized Implementations}
@@ -173,11 +199,21 @@ Experiments were performed using a machine with two Intel Xeon X5355 CPUs (with 
 %% TODO: figure out what type of RAM we have.
 The system is running Ubuntu 12.04.5 on Linux version 3.2.0. All code was compiled using gcc 4.9.0 on optimization level \texttt{O3}.
 
-\subsection{Instances}
+\subsection{Test Data}
 
-The graphs used for these experiments were adopted from \cite{preach}. The different classes of instances are the following:
+The graphs used for these experiments were adopted from~\cite{preach}. The different classes of instances are the following:
 \begin{description}
-  \item{TODO} HAHA
+  \item{\textbf{Large Real:}} \verb|citeseer| is a citation network graph, \verb|uniprotenc-22m| is a subset of the UniProt RDF graph.
+  \item{\textbf{Rand10k:}} These are randomly generated graphs with 10000 nodes.
+  \item{\textbf{Rand1m:}} These are randomly generated graphs with 1000000 nodes.
+  \item{\textbf{Small Real Dense:}} These graphs are mostly obtained from citation networks. All of them have previously been used by~\cite{Jin:2009:HIS:1559845.1559930}.
+  \item{\textbf{Small Real Sparse:}} These graphs have an average degree less than 1.22 and less then
+    40 000 nodes. xmark and nase represent XML documents; amaze and kegg are metabolic
+    networks. The others are from from BioCyc~\cite{grail}. They represent pathway and genome
+    databases.
+  \item{\textbf{Small Scalefree:}} Are relatively small (10000 nodes) scale-free networks.
+  \item{\textbf{Stanford:}} Graphs originating from the Stanford Large Network Dataset Collection. Currently only includes a graph of the Gnutella peer-to-peer network from 2002.
+  \item{\textbf{TFRand:}} XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: where do these come from? The name implies they're from TF-Label...
 \end{description}
 
 
