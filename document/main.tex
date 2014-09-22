@@ -41,11 +41,11 @@ In order to fill an instance of \verb|AdjacencyArrayGraph|, one uses its method 
 
 \subsection{Adjacency List}
 
-The \verb|AdjacencyListGraph| class hold a separate array of outgoing edges per node. In addition to \verb|AdjcacencyArrayGraph|'s interface, it supports the method \verb|void addEdge(int u, int v)| for non-sequential (\eg parallel) construction of the output graph.
+The \verb|AdjacencyListGraph| class hold a separate array of outgoing edges per node. In addition to \verb|AdjacencyArrayGraph|'s interface, it supports the method \verb|void addEdge(int u, int v)| for non-sequential (\eg parallel) construction of the output graph.
 
 \subsection{Adjacency Matrix}
 
-The \verb|AdjacencyMatrixGraph| stores adjacency data in an $n \times n$ bit matrix. In addition to the interfaces mentioned above, it supports methods \verb|bool hasEdge(int u, int v)| and \verb|void setEdge(int u, int v)| for direct access to the matrix.
+The \verb|AdjacencyMatrixGraph| stores adjacency data in an $n \times n$ bit matrix. In addition to the interfaces mentioned above, it supports methods \verb|bool hasEdge(int u, int v)| and \verb|void addEdge(int u, int v)| for direct access to the matrix.
 
 Specifically, the matrix is encoded as a column-major contiguous array of \verb|uint64_t|s holding adjacency information of 64 target nodes (including padding, if necessary). This allows fast bit-wise operations on whole columns via the method \verb|uint64_t* rawCol(int u)|.
 
@@ -127,7 +127,7 @@ Note, however, that while this reduces the set operations to constant time, the 
 
 \subsection{Reverse TLS}
 
-One major drawback of TLS is that it simply iterates over all nodes, completely ignoring any information about topological levels. In the implementation discussed above, it is thus forced to walk the same parts of the graph many times. Reverse Topological Level Search is an alternate formulation of TLS which avoids this problem by iterating over nodes in reverse topological order; This way, by the time the algorithm processes a node, the transitive closure of all of its successors have already been computed, and the algorithm only needs to merge these intermediate results to obtain the transitive closure for the node. Algorithm~\ref{algo:RTLS} shows an implementation in pseudocode.
+One major drawback of TLS is that it simply iterates over all nodes, completely ignoring any information about topological levels. In the implementation discussed above, it is thus forced to walk the same parts of the graph many times. Reverse Topological Level Search is an alternate formulation of TLS which avoids this problem by iterating over nodes in reverse topological order; This way, by the time the algorithm processes a node, the transitive closure of all of its successors have already been computed, and the algorithm only needs to merge these intermediate results to obtain the transitive closure for the node. Algorithm~\ref{algo:RTLS} shows an implementation in pseudo code.
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -150,7 +150,7 @@ One major drawback of TLS is that it simply iterates over all nodes, completely 
     \For{$s \in S$}  % oh god, I hate pseudocode
       \State $bucket[level(s)] \gets bucket[level(s)] \cup \{s\}$
     \EndFor
-    \State $E' \gets \{(n,n) \mid x \in V\}$
+    \State $E' \gets \{(n,n) \mid n \in V\}$
 
     \For{$level \gets maxLevel$ \textbf{down to} $0$}
       \For{$n \in bucket[level]$}
