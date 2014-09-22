@@ -10,7 +10,7 @@ import collections
 # table format:
 
 algos = [line.split()[0] for line in open('algorithms').readlines()]
-fmts = ['matrix','array','list']
+fmts = ['array', 'list', 'matrix']
 
 table_start = """\\begin{table}
 \\adjustbox{max width=\columnwidth}{
@@ -24,7 +24,7 @@ table_end = """  \end{tabular}
 }
 \end{table}
 """
-caption = """Experimental average runtimes of the tested graph instances in seconds. For each graph instance and each algorithm, the table lists processing times for the internal graph representation as adjacency matrix, adjacency array and adjacency list in that order. A value of \\texttt{TIME} signifies that the computation timed out after 10 seconds; a value of \\texttt{MEM} signifies the test machine ran out of memory."""
+caption = """Experimental average runtimes of the tested graph instances in seconds. For each graph instance and each algorithm, the table lists processing times for the internal graph representation as adjacency array, adjacency list and adjacency matrix in that order. A value of \\texttt{TIME} signifies that the computation timed out after 10 seconds; a value of \\texttt{MEM} signifies the test machine ran out of memory."""
 table_end_caption = """  \end{tabular}
 }
 \caption{%s}
