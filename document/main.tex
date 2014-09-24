@@ -30,7 +30,7 @@
 
 \section{Introduction}
 
-The problem of computing the transitive closure of a graph is a rather well-known one, and over the years a number of different algorithms have been devised to compute solutions. In this paper, we deliver implementations of several of these algorithms on top of a graph gramework written in C++ and evaluate the performance of these algorithms. The complete source code of this framework along with the implementations of the different algorithms is available on Github\footnote{\url{https://github.com/tehmillhouse/transitiveclosure/}}.
+The problem of computing the transitive closure of a directed acyclic graph is a rather well-known one, and over the years a number of different algorithms have been devised to compute solutions. In this paper, we deliver implementations of several of these algorithms on top of a graph gramework written in C++ and evaluate the performance of these algorithms. Our implementation computes the reflexive-transitive closure, as this simplified algorithm design. As our input graphs are acyclic, this is only a trivial change. The complete source code of this framework along with the implementations of the different algorithms is available on Github\footnote{\url{https://github.com/tehmillhouse/transitiveclosure/}}.
 
 \section{The Graph Framework}
 
@@ -216,7 +216,7 @@ The graphs used for these experiments were adopted from~\cite{preach}. The diffe
     databases.
   \item{\textbf{Small Scalefree:}} Are relatively small (10000 nodes) scale-free networks.
   \item{\textbf{Stanford:}} Graphs originating from the Stanford Large Network Dataset Collection. Currently only includes a graph of the Gnutella peer-to-peer network from 2002.
-  \item{\textbf{TFRand:}} XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: where do these come from? The name implies they're from TF-Label...
+%%  \item{\textbf{TFRand:}} XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: where do these come from? The name implies they're from TF-Label...
 \end{description}
 
 
