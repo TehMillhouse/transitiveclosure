@@ -385,6 +385,23 @@ public:
         mergeSuccessors(*ret, v);
     return ret;
   }
+
+  template<class G>
+  std::unique_ptr<G> paraRTLS() {
+    setTopologicalLevels();
+    std::vector<std::vector<int>> levelBuckets(levels);
+    for (Node &v : nodes) {
+      levelBuckets[v.level].push_back(&v-&nodes[0]);
+    }
+
+    std::unique_ptr<G> ret(new G(nodes.size()));
+    for (int l = levels-1; l >= 0; l--)
+      #pragma omp parallel for schedule(static)
+      for (int idx = 0; idx < levelBuckets[l].size(); idx++) {
+        mergeSuccessors(*ret, levelBuckets[l][idx]);
+      }
+    return ret;
+  }
 };
 
 template<> inline std::unique_ptr<AdjacencyArrayGraph> AdjacencyArrayGraph::bitParallelTopologicalLevelSearch() {
