@@ -7,9 +7,11 @@ import pprint
 import sys
 import collections
 
+import algorithms
+
 # table format:
 
-algos = [line.split()[0] for line in open('algorithms').readlines()]
+algos = algorithms.algorithms.keys()
 fmts = ['array', 'list', 'matrix']
 
 table_start = """\\begin{table}
