@@ -3,9 +3,9 @@
 
 [ -e 'out/$1' ] || mkdir -p out/$1
 
-for algo in BFS paraBFS DFS TLS TLS64 RecMerge RTLS
+while read algo formats
 do
   echo $algo
   ./measure.py $1 $algo | tee out/$1/$algo
-done
+done < algorithms
 ./plot.py $1
