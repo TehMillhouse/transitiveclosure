@@ -6,6 +6,7 @@
 \usepackage{amsmath}
 \usepackage{algorithm, algpseudocode}
 \usepackage{adjustbox}
+\usepackage{url}
 
 \DeclareMathOperator*{\argmin}{\arg\!\min}
 
@@ -28,6 +29,8 @@
 \end{abstract}
 
 \section{Introduction}
+
+The problem of computing the transitive closure of a graph is a rather well-known one, and over the years a number of different algorithms have been devised to compute solutions. In this paper, we deliver implementations of several of these algorithms on top of a graph gramework written in C++ and evaluate the performance of these algorithms. The complete source code of this framework along with the implementations of the different algorithms is available on Github\footnote{\url{https://github.com/tehmillhouse/transitiveclosure/}}.
 
 \section{The Graph Framework}
 
@@ -195,7 +198,7 @@ The Recursive Merge algorithm works through much of the same mechanisms as RTLS,
 
 \section{Evaluation}
 
-Experiments were performed using a machine with two Intel Xeon X5355 CPUs (with Hyperthreading disabled) running at 2.66 GHz; L2 cache is 2 $\times$ 4MB per physical CPU, L1 cache is 4 $\times$ 64KB per physical CPU distributed equally between code and data cache. The test machine has 24GB of RAM.
+Experiments were performed using a machine with two Intel Xeon X5355 CPUs (with Hyperthreading disabled) running at 2.66 GHz; L2 cache is 2 $\times$ 4MB per physical CPU, L1 cache is 4 $\times$ 64KB per physical CPU distributed equally between instruction and data cache. The test machine has 24GB of RAM.
 %% TODO: figure out what type of RAM we have.
 The system is running Ubuntu 12.04.5 on Linux version 3.2.0. All code was compiled using gcc 4.9.0 on optimization level \texttt{O3}.
 
