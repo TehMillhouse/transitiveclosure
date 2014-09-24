@@ -32,7 +32,7 @@ int exec(std::string algo, bool output, double seconds) {
     } else if (algo == "RTLS") {
       gOut = g->reverseTopologicalLevelSearch<G>();
     } else if (algo == "paraRTLS") {
-      gOut = g->reverseTopologicalLevelSearch<G>();
+      gOut = g->paraRTLS<G>();
     } else {
       std::cout << "Unknown algorithm" << std::endl;
       return 43;

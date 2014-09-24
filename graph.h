@@ -345,30 +345,29 @@ public:
     return ret;
   }
 
-  std::vector<int> reached;
-
-  template<class G> void mergeSuccessors(G &g, int v) {
+  template<class G> void mergeSuccessors(G &g, int v, std::vector<bool> &reachedFlags) {
     abort();
   }
 
   template<class G>
-  void recursiveMergeAux(G &g, int v) {
+  void recursiveMergeAux(G &g, int v, std::vector<bool> &reachedFlags) {
     nodes[v].visited = true;
     for (int u : successors(v))
       if (!nodes[u].visited)
-        recursiveMergeAux(g, u);
-    mergeSuccessors(g, v);
+        recursiveMergeAux(g, u, reachedFlags);
+    mergeSuccessors(g, v, reachedFlags);
   }
 
   template<class G>
   std::unique_ptr<G> recursiveMerge() {
     std::unique_ptr<G> ret(new G(nodes.size()));
+    std::vector<bool> reachedFlags(nodes.size());
     for (int v = 0; v < nodes.size(); v++) {
       nodes[v].visited = false;
     }
     for (int v = 0; v < nodes.size(); v++)
       if (!nodes[v].visited)
-        recursiveMergeAux(*ret, v);
+        recursiveMergeAux(*ret, v, reachedFlags);
     return ret;
   }
 
@@ -381,9 +380,11 @@ public:
     }
 
     std::unique_ptr<G> ret(new G(nodes.size()));
+    std::vector<bool> reachedFlags(nodes.size());
+
     for (int l = levels-1; l >= 0; l--)
       for (int v : levelBuckets[l])
-        mergeSuccessors(*ret, v);
+        mergeSuccessors(*ret, v, reachedFlags);
     return ret;
   }
 
@@ -396,11 +397,17 @@ public:
     }
 
     std::unique_ptr<G> ret(new G(nodes.size()));
-    for (int l = levels-1; l >= 0; l--)
-      #pragma omp parallel for schedule(static)
-      for (int idx = 0; idx < levelBuckets[l].size(); idx++) {
-        mergeSuccessors(*ret, levelBuckets[l][idx]);
+    #pragma omp parallel
+    {
+      std::vector<bool> reachedFlags(nodes.size());
+
+      for (int l = levels-1; l >= 0; l--) {
+        #pragma omp for schedule(static)
+        for (int idx = 0; idx < levelBuckets[l].size(); idx++) {
+          mergeSuccessors(*ret, levelBuckets[l][idx], reachedFlags);
+        }
       }
+    }
     return ret;
   }
 };
@@ -411,22 +418,23 @@ template<> inline std::unique_ptr<AdjacencyArrayGraph> AdjacencyArrayGraph::bitP
 }
 
 template<> inline
-void AdjacencyArrayGraph::mergeSuccessors(AdjacencyListGraph &g, int v) {
+void AdjacencyArrayGraph::mergeSuccessors(AdjacencyListGraph &g, int v, std::vector<bool> &reachedFlags) {
+  std::vector<int> reached;
+
   for (int u : successors(v))
     for (int w : g.adj[u])
-      if (!nodes[w].reached) {
-        nodes[w].reached = true;
+      if (!reachedFlags[w]) {
+        reachedFlags[w] = true;
         reached.push_back(w);
         g.addEdge(v, w);
       }
   g.addEdge(v, v);
 
-  for (int w : reached) nodes[w].reached = false;
-  reached.clear();
+  for (int w : reached) reachedFlags[w] = false;
 }
 
 template<> inline
-void AdjacencyArrayGraph::mergeSuccessors(AdjacencyMatrixGraph &g, int v) {
+void AdjacencyArrayGraph::mergeSuccessors(AdjacencyMatrixGraph &g, int v, std::vector<bool> &reachedFlags) {
   for (int u : successors(v)) {
     // col[v] |= col[u];
     for (int k = 0; k < g.col_size; k++) {
