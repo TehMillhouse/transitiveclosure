@@ -13,7 +13,8 @@ algos = [line.split()[0] for line in open('algorithms').readlines()]
 fmts = ['array', 'list', 'matrix']
 
 table_start = """\\begin{table}
-\\adjustbox{max width=\columnwidth}{
+\\hspace{-2cm}
+\\adjustbox{max width=1.2\columnwidth}{
 \\begin{tabular}{ l c c | %s }
   Graph & $n$ & $m$ & %s \\\\
     \hline
