@@ -177,6 +177,7 @@ public:
   std::unique_ptr<G> warshallALgorithm() {
     std::unique_ptr<G> result(new G(nodes.size()));
 		for(int i = 0; i < nodes.size(); i++) {
+      result->addEdge(i, i);
 			for(int j : successors(i)) {
 				result->addEdge(i, j);
 			}
