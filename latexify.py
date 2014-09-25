@@ -66,7 +66,7 @@ def parse_data(algo, lines):
             g.samples[(algo, fmt)] = res
 
     for g in graphs.values():
-        g.fastest = min([1000] + [time for time in g.samples.values() if type(time) is float])
+        g.fastest = min([1000] + [time for (algo, time) in g.samples.items() if type(time) is float and algo[0] != 'preach'])
 
 def get_cell_text(graph, algo, fmt):
     res = graphs[graph].samples.get((algo, fmt), '-')

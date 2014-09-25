@@ -1,7 +1,8 @@
-CPPFLAGS=-std=gnu++11 -O3 -march=native *.cpp
+CPPFLAGS=-std=gnu++11 -O3 -Ipreach2014 -march=native *.cpp */*.cc
+CC=/software/gcc/4.9.0/bin/g++
 
 all:
-	g++ $(CPPFLAGS) -fopenmp -o closure
+	$(CC) $(CPPFLAGS) -fopenmp -o closure
 
 debug:
 	g++ $(CPPFLAGS) -g -fopenmp -o closure

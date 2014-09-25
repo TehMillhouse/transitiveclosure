@@ -4,6 +4,7 @@
 #include <memory>
 #include <omp.h>
 #include "graph.h"
+#include <ConstructionGraph.hh>
 
 template <class G>
 int exec(std::string algo, bool output, double seconds) {
@@ -52,6 +53,26 @@ int exec(std::string algo, bool output, double seconds) {
   return 0;
 }
 
+int execPreach(double seconds) {
+  preach::ConstructionGraph cg;
+  cg.read(std::cin);
+  auto start = std::chrono::high_resolution_clock::now();
+  double runtime;
+  // we're only comparing the construction time for preach graphs
+  std::unique_ptr<preach::QueryGraph> qg = cg.construct();
+  cg.qg.reset();
+
+  auto end = std::chrono::high_resolution_clock::now();
+  runtime = std::chrono::duration<double>(end-start).count();
+
+  // output format feasible for gnuplot:
+  // <#nodes>  <time>
+  std::cerr << cg.n << "  ";
+  std::cerr << runtime << std::endl;
+
+  return 0;
+}
+
 int main(int argc, char **argv) {
   if (argc < 3) {
     std::cout << "Usage: closure <algorithm> <output format> [-threads <num-threads>] [-seconds <num>] [-no-output]" << std::endl;
@@ -77,6 +98,10 @@ int main(int argc, char **argv) {
   }
 
   std::cerr << argv[1] << "  " << format << "  ";
+  std::string algo = argv[1];
+  if (algo == "preach") {
+    return execPreach(seconds);
+  }
   if (format == "count")
     return exec<CountingGraph>(argv[1], output, seconds);
   else if (format == "array")

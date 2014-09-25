@@ -11,9 +11,12 @@ import os
 import time
 import sys
 
+env = os.environ.copy()
+env['LD_PRELOAD'] = '/software/gcc/4.9.0/lib64/libgomp.so.1'
+
 def print_result(algo, fmt, graph):
     with open(graph) as infile:
-        p = subprocess.Popen(['./closure', algo, fmt, '-seconds', '0.1', '-no-output'], stdin=infile, stderr=subprocess.PIPE)
+        p = subprocess.Popen(['./closure', algo, fmt, '-seconds', '1', '-no-output'], stdin=infile, stderr=subprocess.PIPE, env=env)
         ret = [None]
         def run():
             p.wait()
