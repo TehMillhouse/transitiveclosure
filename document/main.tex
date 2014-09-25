@@ -9,11 +9,12 @@
 \usepackage{url}
 
 \DeclareMathOperator*{\argmin}{\arg\!\min}
+\DeclareMathOperator*{\reachable}{reachable}
 
 \begin{document}
 
 \title{Fast Transitive Closure Computation}
-\author{Max Wagner \and Sebastian Ullrich \and Tobias Fleck}
+\author{Max Wagner \and Sebastian Ullrich}
 \date{August 2014}
 \maketitle
 
@@ -23,6 +24,8 @@
 \newcommand\ie{i.e.\ }
 \newcommand\eg{e.g.,\ }
 \newcommand\credits[1]{\begin{flushright}\emph{#1}\end{flushright}}
+\newcommand\abs[1]{\left|#1\right|}
+\newcommand\BigOh[1]{\mathcal{O}\left(#1\right)}
 
 \begin{abstract}
   In this paper, we discuss and evaluate various algorithms for computing the transitive closure of a directed acyclic graph. The algorithms are implemented on top of a generic, template-based framework to make them independent from the input and output representation, where possible.
@@ -30,11 +33,11 @@
 
 \section{Introduction}
 
-The problem of computing the transitive closure of a directed acyclic graph is a rather well-known one, and over the years a number of different algorithms have been devised to compute solutions. In this paper, we deliver implementations of several of these algorithms on top of a graph gramework written in C++ and evaluate the performance of these algorithms. Our implementation computes the reflexive-transitive closure, as this simplified algorithm design. As our input graphs are acyclic, this is only a trivial change. The complete source code of this framework along with the implementations of the different algorithms is available on Github\footnote{\url{https://github.com/tehmillhouse/transitiveclosure/}}.
+The problem of computing the transitive closure $E^+$ of a directed acyclic graph $G = (V,E)$ is a rather well-known one, and over the years a number of different algorithms have been devised to compute solutions. In this paper, we deliver implementations of several of these algorithms on top of a graph framework written in C++ and evaluate the performance of these algorithms. Our implementation computes the reflexive-transitive closure $E^*$, as this simplified algorithm design. As our input graphs are acyclic, this is only a trivial change. The complete source code of this framework along with the implementations of the different algorithms is available on Github\footnote{\url{https://github.com/tehmillhouse/transitiveclosure/}}.
 
 \section{The Graph Framework}
 
-While an adjacency matrix is the most natural representation of transitive closures since it can answer reachability queries in constant time, its size of $n^2$ bits can quickly outgrow a computer's main memory, even though the closure itself may be relatively sparse for realistic inputs. For this reason, we decided to implement adjacency lists and arrays as additional output formats and make the implementations independent of the actual format by use of C++ templates. Naturally, not every algorithm can be implemented for every output format, as will be noted below.
+While an adjacency matrix is the most natural representation of transitive closures since it can answer reachability queries in constant time, its size of $\abs{V}^2$ bits can quickly outgrow a computer's main memory, even though the closure itself may be relatively sparse for realistic inputs. For this reason, we decided to implement adjacency lists and arrays as additional output formats and make the implementations independent of the actual format by use of C++ templates. Naturally, not every algorithm can be implemented for every output format, as will be noted below.
 
 \subsection{Adjacency Array}
 
@@ -48,14 +51,14 @@ The \verb|AdjacencyListGraph| class hold a separate array of outgoing edges per 
 
 \subsection{Adjacency Matrix}
 
-The \verb|AdjacencyMatrixGraph| stores adjacency data in an $n \times n$ bit matrix. In addition to the interfaces mentioned above, it supports methods \verb|bool hasEdge(int u, int v)| and \verb|void addEdge(int u, int v)| for direct access to the matrix.
+The \verb|AdjacencyMatrixGraph| stores adjacency data in a $\abs{V} \times \abs{V}$ bit matrix. In addition to the interfaces mentioned above, it supports methods \verb|bool hasEdge(int u, int v)| and \verb|void addEdge(int u, int v)| for direct access to the matrix.
 
 Specifically, the matrix is encoded as a column-major contiguous array of \verb|uint64_t|s holding adjacency information of 64 target nodes (including padding, if necessary). This allows fast bit-wise operations on whole columns via the method \verb|uint64_t* rawCol(int u)|.
 
 \section{Single-Source Algorithms}
 \credits{Sebastian Ullrich}
 
-Both breadth-first search (BFS) and depth-first search (DFS) are well-known algorithms for computing the graph reachability starting from a single source node. Topological level search (TLS) can be regarded as a variant of BFS where nodes are visited in order of increasing topological level. A pseudo code implementation is shown in Algorithm~\ref{algo:TLS}.
+By first solving the graph reachability problem starting from a single source node $u$, which we will call $\reachable(u) := \{v \in V | (u, v) \in E^*\}$, we can easily compose the whole closure: $E^* = \{(u, v) | u \in V, v \in \reachable(u)\}$. Both breadth-first search (BFS) and depth-first search (DFS) are well-known algorithms for solving the reachability problem in $\BigOh{\abs{E}}$, yielding a total run time of $\BigOh{\abs{V} \abs{E}}$. Topological level search (TLS) can be regarded as a variant of BFS where nodes are visited in order of increasing topological level. This doesn't change the asymptotic run time, but can potentially improve cache efficiency because nodes of the same topological level are likely to share successor nodes. A pseudo code implementation is shown in Algorithm~\ref{algo:TLS}.
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -68,7 +71,7 @@ Both breadth-first search (BFS) and depth-first search (DFS) are well-known algo
           \For{$v \in V, (u,v) \in E$}
             \If{$\neg visited[v]$}
               \State $visited[v] \gets true$
-              \State $reached[s, v] \gets true$
+              \State $reachable[s, v] \gets true$
               \State $next[level(v)] \gets next[level(v)] \cup \{v\}$
             \EndIf
           \EndFor
@@ -81,14 +84,14 @@ Both breadth-first search (BFS) and depth-first search (DFS) are well-known algo
   \label{algo:TLS}
 \end{algorithm}
 
-By separately computing reachability for each node in the graph, these single-source algorithms can compute the transitive closure in $\mathcal{O}(n(n+m))$. As a small optimization, we can avoid having to reset the whole $visited$ array by saving the reached nodes in a list in addition to the $reached$ bit array and explicitly resetting only those nodes. This is even easier for TLS, as evidenced by Algorithm~\ref{algo:TLS}, because a node cannot be reached any more once it has been visited.
+As a small optimization, we can avoid having to reset the whole \emph{visited} array by saving the reached nodes in a list in addition to the \emph{reached} bit array and explicitly resetting only those nodes. This is even easier for TLS, as evidenced by Algorithm~\ref{algo:TLS}, because a node cannot be reached any more once it has been visited.
 
 \section{Bit-Parallel TLS}
 \credits{Sebastian Ullrich}
 
-As a first improvement over the single-source algorithms, we can reduce the expected number of graph traversals by generalizing the algorithms to traverse a whole set $S$ of start nodes at the same time; Algorithm~\ref{algo:MultiTLS} shows such a straightforward extension for TLS. Selecting the nodes in $S$ from the same topological level is a good heuristics for finding nodes whose reachable subgraphs overlap maximally. If we furthermore restrict the size of $S$ to the hardware word size $w$, we can efficiently implement the set operations on $visited$ by native bitwise operations, yielding a \emph{bit-parallel} implementation.
+As a first improvement over the single-source algorithms, we can reduce the expected number of graph traversals by generalizing the algorithms to traverse a whole set $S$ of start nodes at the same time; Algorithm~\ref{algo:MultiTLS} shows such a straightforward extension for TLS. Selecting the nodes in $S$ from the same topological level is a good heuristics for finding nodes whose reachable subgraphs overlap maximally. If we furthermore restrict the size of $S$ to the hardware word size $w$, we can efficiently implement the set operations on \emph{visited} by native bitwise operations, yielding a \emph{bit-parallel} implementation.
 
-Note, however, that while this reduces the set operations to constant time, the loop iterating over all set bits of $visited[u]$ still needs $w$ iterations. So for sparse graphs there is a non-negligible overhead over basic TLS even though the rest of the algorithm graciously degrades to the single-source implementation in that situation. Even for adjacency matrix outputs, we cannot simplify the loop to a constant-time word move since choosing $S$ from topological levels means its nodes will in general not be contiguous in the output matrix. As a potential future extension, one could allow algorithms to permute the order of nodes in the output in order to implement this optimization.
+Note, however, that while this reduces the set operations to constant time, the loop iterating over all set bits of \emph{visited[u]} still needs $w$ iterations. So for sparse graphs there is a non-negligible overhead over basic TLS even though the rest of the algorithm graciously degrades to the single-source implementation in that situation. Even for adjacency matrix outputs, we cannot simplify the loop to a constant-time word move since choosing $S$ from topological levels means its nodes will in general not be contiguous in the output matrix. As a potential future extension, one could allow algorithms to permute the order of nodes in the output in order to implement this optimization.
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -98,10 +101,10 @@ Note, however, that while this reduces the set operations to constant time, the 
         \State $next[level(s)] \gets next[level(s)] \cup \{s\}$
         \State $visited[s] \gets \{s\}$
       \EndFor
-      \For{$l \gets \argmin_{s \in S} level(s), maxLevel$}
+      \For{$l \gets \min \{level(s) | s \in S\} , maxLevel$}
         \For{$u \in next[l]$}
           \For{$s \in visited[u]$}
-            \State $reached[s, u] \gets true$
+            \State $reachable[s, u] \gets true$
           \EndFor
           \State $visited[u] \gets \emptyset$
           \For{$v \in V, (u,v) \in E$}
@@ -119,82 +122,30 @@ Note, however, that while this reduces the set operations to constant time, the 
   \label{algo:MultiTLS}
 \end{algorithm}
 
-\section{All-Source Algorithms}
+\section{All-Sources Algorithms}
 \credits{Floyd-Warshall: Tobias Fleck \\
          RecMerge: Sebastian Ullrich \\
          RTLS: Max Wagner}
 
-\subsection{Reverse TLS}
+The Floyd-Warshall algorithm is a well known solution to the all-pairs shortest path problem and therefore can also be used to compute the transitive closure. However, its runtime of $\mathcal{O}(\abs{V}^3)$ makes it prohibitively expensive compared to the other algorithms on the usually sparse input graphs.
 
-One major drawback of TLS is that it simply iterates over all nodes, completely ignoring any information about topological levels. In the implementation discussed above, it is thus forced to walk the same parts of the graph many times. Reverse Topological Level Search is an alternate formulation of TLS which avoids this problem by iterating over nodes in reverse topological order; This way, by the time the algorithm processes a node, the transitive closure of all of its successors have already been computed, and the algorithm only needs to merge these intermediate results to obtain the transitive closure for the node. Algorithm~\ref{algo:RTLS} shows an implementation in pseudo code.
+In order to find an efficient all-sources algorithm, \eg one that reuses intermediate results such as \emph{reachable}, we can use the following recursive definition of \emph{reachable}:
 
-\begin{algorithm}[h]
-  \begin{algorithmic}
-    \Function{RTLS}{V}
-    \State find topological levels
-    \For{$n \in V$}  % oh god, I hate pseudocode
-      \State $bucket[level(n)] \gets bucket[level(n)] \cup \{n\}$
-    \EndFor
-    \State $E' \gets \{(n,n) \mid n \in V\}$
+\begin{equation}
+  \reachable(u) = \{u\} \cup \bigcup_{\substack{v \\ (u, v) \in E}} \reachable(v)
+  \label{reachable-rec}
+\end{equation}
 
-    \For{$level \gets maxLevel$ \textbf{down to} $0$}
-      \For{$n \in bucket[level]$}
-        \State $E' \gets \Call{MergeSuccessors}{E, E', n}$
-      \EndFor
-    \EndFor
-    \State \Return $(V, E')$
-    \EndFunction
-    \\
-    \Function{MergeSuccessors}{E, E', n}
-      \For{$(n,s) \in E$}
-      \Comment For each successor $s$ of $n$...
-        \For{$(s,u) \in E'$}
-        \Comment For each reachable node $u$ from $s$...
-          \If{$\neg reached[u]$}
-            \State $reached[u] \gets true$
-            \State $E' \gets E' \cup \{(n,u)\}$
-          \EndIf
-        \EndFor
-      \EndFor
-      \State \Return $E'$
-    \EndFunction
-  \end{algorithmic}
-  \caption{Reverse TLS}
-  \label{algo:RTLS}
-\end{algorithm}
+The RecMerge algorithm simply evaluates this definition recursively for all $u \in V$, reusing \emph{reachable} columns that have already been computed; Note that the recursion will always terminate on finite DAGs. Reverse Topological Level Search (RTLS) is also based on the formula, but visits nodes in descending order of topological level, which ensures that all $\reachable(v)$ on the right-hand side have already been computed. As an immediate advantage over RecMerge, RTLS can trivially be parallelized (paraRTLS): Since nodes in the same topological level are not adjacent, their \emph{reachable} columns can be computed in parallel.
 
-\subsection{RecMerge}
+The only thing left to do is to find an efficient implementation for equation~(\ref{reachable-rec}) itself. For the adjacency matrix output, this is a bitwise \emph{or} of $deg^+(v)$ columns, yielding a total runtime of $\BigOh{\sum_{v \in V} deg^+(v) \frac{\abs{V}}{w}} = \BigOh{\frac{\abs{V} \abs{E}}{w}}$. For the adjacency list output, we walk through all $reachable(v)$ and use a bit array to detect duplicate nodes. By using the same trick as with BFS for resetting this array, we can achieve a run time of
 
-The Recursive Merge algorithm works through much of the same mechanisms as RTLS, except that instead of explicitly determining topological levels and processing the nodes according to the resulting schedule, RecMerge performs this calculation implicitly by recursing on each node's successors. Algorithm~\ref{algo:RecMerge} shows a pseudo code implementation which uses the procedure \verb|MergeSuccessors| introduced in Algorithm~\ref{algo:RTLS} (RTLS).
-
-\begin{algorithm}[h]
-\begin{algorithmic}
-  \Function{RecursiveMerge}{V}
-    \State $E' \gets \{(n, n) \mid n \in V \}$
-    \For{$n \in V$}
-      \If{$\neg visited[n]$}
-        \State $E' \gets \Call{RecursiveMergeAux}{E, E', s}$
-      \EndIf
-    \EndFor
-    \State \Return $E'$
-  \EndFunction
-  \\
-  \Function{RecursiveMergeAux}{E, E', n}
-    \State $visited[n] \gets true$
-    \For{$(n, s) \in E$}
-      \If{$\neg visited[s]$}
-        \State $E' \gets \Call{RecursiveMergeAux}{E, E', s}$
-      \EndIf
-    \EndFor
-    \State $\Return \Call{MergeSuccessors}{E, E', n}$
-  \EndFunction
-\end{algorithmic}
-\caption{Recursive Merge}
-\label{algo:RecMerge}
-\end{algorithm}
-
-\section{Parallelized Implementations}
-\credits{Tobias Fleck}
+\begin{align*}
+\BigOh{\sum_{u \in V} \sum_{\substack{v \\ (u, v) \in E}} \abs{\reachable(v)}}
+&= \BigOh{\sum_{v \in V} \deg^-(v) \abs{\reachable(v)}} \\
+&\subset \BigOh{\sum_{v \in V} \abs{V} \abs{\reachable(v)}} \\
+&= \BigOh{\abs{V} \abs{E^*}}
+\end{align*}
 
 \section{Evaluation}
 
