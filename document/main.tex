@@ -28,7 +28,7 @@
 \newcommand\BigOh[1]{\mathcal{O}\left(#1\right)}
 
 \begin{abstract}
-  In this paper, we discuss and evaluate various algorithms for computing the transitive closure of a directed acyclic graph. The algorithms are implemented on top of a generic, template-based framework to make them independent from the input and output representation, where possible.
+  In this paper, we discuss and evaluate various algorithms for computing the transitive closure of a directed acyclic graph (DAG). The algorithms are implemented on top of a generic, template-based framework to make them independent from the input and output representation, where possible.
 \end{abstract}
 
 \section{Introduction}
@@ -43,22 +43,22 @@ While an adjacency matrix is the most natural representation of transitive closu
 
 The \verb|AdjacencyArrayGraph| class stores its edges' target nodes in a contiguous array. Each node references a range in that array as its outgoing edges.
 
-In order to fill an instance of \verb|AdjacencyArrayGraph|, one uses its method \verb|void pushNode()| to add a new node, followed by zero or more invocations of \verb|void pushEdge(int v)| to add its outgoing edges. While this strictly sequential interface is the most restrictive one, it also guarantees a minimum of cache misses for constructing the output graph. Likewise, it could be trivially extended into a semi-external algorithm (where only the input graph has to fit in memory) by writing the output directly to disk.
+In order to fill an instance of \verb|AdjacencyArrayGraph|, one uses its method \verb|void pushNode()| to add a new node, followed by zero or more invocations of \verb|void pushEdge(int v)| to add its outgoing edges. While this strictly sequential interface is the most restrictive one, it also guarantees a minimum of cache misses for constructing the output graph. Likewise, it could trivially be extended into a semi-external algorithm (where only the input graph has to fit in memory) by writing the output directly to disk.
 
 \subsection{Adjacency List}
 
-The \verb|AdjacencyListGraph| class hold a separate array of outgoing edges per node. In addition to \verb|AdjacencyArrayGraph|'s interface, it supports the method \verb|void addEdge(int u, int v)| for non-sequential (\eg parallel) construction of the output graph.
+The \verb|AdjacencyListGraph| class holds a separate array of outgoing edges per node. In addition to \verb|AdjacencyArrayGraph|'s interface, it supports the method \verb|void addEdge(int u, int v)| for non-sequential (\eg parallel) construction of the output graph.
 
 \subsection{Adjacency Matrix}
 
-The \verb|AdjacencyMatrixGraph| stores adjacency data in a $\abs{V} \times \abs{V}$ bit matrix. In addition to the interfaces mentioned above, it supports methods \verb|bool hasEdge(int u, int v)| and \verb|void addEdge(int u, int v)| for direct access to the matrix.
+The \verb|AdjacencyMatrixGraph| stores adjacency data in a $\abs{V} \times \abs{V}$ bit matrix. In addition to the interfaces mentioned above, it supports random access via the method \verb|bool hasEdge(int u, int v)|.
 
 Specifically, the matrix is encoded as a column-major contiguous array of \verb|uint64_t|s holding adjacency information of 64 target nodes (including padding, if necessary). This allows fast bit-wise operations on whole columns via the method \verb|uint64_t* rawCol(int u)|.
 
 \section{Single-Source Algorithms}
 \credits{Sebastian Ullrich}
 
-By first solving the graph reachability problem starting from a single source node $u$, which we will call $\reachable(u) := \{v \in V | (u, v) \in E^*\}$, we can easily compose the whole closure: $E^* = \{(u, v) | u \in V, v \in \reachable(u)\}$. Both breadth-first search (BFS) and depth-first search (DFS) are well-known algorithms for solving the reachability problem in $\BigOh{\abs{E}}$, yielding a total run time of $\BigOh{\abs{V} \abs{E}}$. Topological level search (TLS) can be regarded as a variant of BFS where nodes are visited in order of increasing topological level. This doesn't change the asymptotic run time, but can potentially improve cache efficiency because nodes of the same topological level are likely to share successor nodes. A pseudo code implementation is shown in Algorithm~\ref{algo:TLS}.
+By first solving the graph reachability problem starting from a single source node $u$, which we will call $\reachable(u) := \{v \in V | (u, v) \in E^*\}$, we can easily compose the whole closure: $E^* = \{(u, v) | u \in V, v \in \reachable(u)\}$. Both breadth-first search (BFS) and depth-first search (DFS) are well-known algorithms for solving the reachability problem in $\BigOh{\abs{E}}$ time, yielding a total run time of $\BigOh{\abs{V} \abs{E}}$. Topological level search (TLS) can be regarded as a variant of BFS where nodes are visited in order of increasing topological level. This doesn't change the asymptotic run time, but can potentially improve cache efficiency because nodes of the same topological level are likely to share successor nodes. A pseudo code implementation is shown in Algorithm~\ref{algo:TLS}.
 
 \begin{algorithm}
   \begin{algorithmic}
@@ -86,10 +86,12 @@ By first solving the graph reachability problem starting from a single source no
 
 As a small optimization, we can avoid having to reset the whole \emph{visited} array by saving the reached nodes in a list in addition to the \emph{reached} bit array and explicitly resetting only those nodes. This is even easier for TLS, as evidenced by Algorithm~\ref{algo:TLS}, because a node cannot be reached any more once it has been visited.
 
+Since the individual executions of a single-source algorithm are independent of each other, the three algorithms are embarassingly parallel problems. We have implemented this for BFS, yielding \emph{paraBFS}.
+
 \section{Bit-Parallel TLS}
 \credits{Sebastian Ullrich}
 
-As a first improvement over the single-source algorithms, we can reduce the expected number of graph traversals by generalizing the algorithms to traverse a whole set $S$ of start nodes at the same time; Algorithm~\ref{algo:MultiTLS} shows such a straightforward extension for TLS. Selecting the nodes in $S$ from the same topological level is a good heuristics for finding nodes whose reachable subgraphs overlap maximally. If we furthermore restrict the size of $S$ to the hardware word size $w$, we can efficiently implement the set operations on \emph{visited} by native bitwise operations, yielding a \emph{bit-parallel} implementation.
+As a first improvement over the single-source algorithms, we can reduce the expected number of graph traversals by generalizing the algorithms to traverse a whole set $S$ of start nodes at the same time; Algorithm~\ref{algo:MultiTLS} shows such a straightforward extension for TLS. Selecting the nodes in $S$ from the same topological level is a good heuristics for finding nodes whose reachable subgraphs overlap maximally. If we furthermore restrict the size of $S$ to the hardware word size $w$, we can efficiently implement the set operations on \emph{visited} by native bitwise operations, yielding a \emph{bit-parallel} implementation (\emph{TLS64} in case of the 64-bit target system).
 
 Note, however, that while this reduces the set operations to constant time, the loop iterating over all set bits of \emph{visited[u]} still needs $w$ iterations. So for sparse graphs there is a non-negligible overhead over basic TLS even though the rest of the algorithm graciously degrades to the single-source implementation in that situation. Even for adjacency matrix outputs, we cannot simplify the loop to a constant-time word move since choosing $S$ from topological levels means its nodes will in general not be contiguous in the output matrix. As a potential future extension, one could allow algorithms to permute the order of nodes in the output in order to implement this optimization.
 
@@ -127,7 +129,7 @@ Note, however, that while this reduces the set operations to constant time, the 
          RecMerge: Sebastian Ullrich \\
          RTLS: Max Wagner}
 
-The Floyd-Warshall algorithm is a well known solution to the all-pairs shortest path problem and therefore can also be used to compute the transitive closure. However, its runtime of $\mathcal{O}(\abs{V}^3)$ makes it prohibitively expensive compared to the other algorithms on the usually sparse input graphs.
+The Floyd-Warshall algorithm is a well known solution to the all-pairs shortest path problem and therefore can also be used to compute the transitive closure. However, its run time of $\mathcal{O}(\abs{V}^3)$ makes it prohibitively expensive compared to the other algorithms on the usually sparse input graphs.
 
 In order to find an efficient all-sources algorithm, \eg one that reuses intermediate results such as \emph{reachable}, we can use the following recursive definition of \emph{reachable}:
 
@@ -136,9 +138,9 @@ In order to find an efficient all-sources algorithm, \eg one that reuses interme
   \label{reachable-rec}
 \end{equation}
 
-The RecMerge algorithm simply evaluates this definition recursively for all $u \in V$, reusing \emph{reachable} columns that have already been computed; Note that the recursion will always terminate on finite DAGs. Reverse Topological Level Search (RTLS) is also based on the formula, but visits nodes in descending order of topological level, which ensures that all $\reachable(v)$ on the right-hand side have already been computed. As an immediate advantage over RecMerge, RTLS can trivially be parallelized (paraRTLS): Since nodes in the same topological level are not adjacent, their \emph{reachable} columns can be computed in parallel.
+The RecMerge algorithm simply evaluates this definition recursively for all $u \in V$, reusing \emph{reachable} values that have already been computed; Note that the recursion will always terminate on finite DAGs. Reverse Topological Level Search (RTLS) is also based on the formula, but visits nodes in descending order of topological level, which ensures that all $\reachable(v)$ on the right-hand side have already been computed. As an immediate advantage over RecMerge, RTLS can trivially be parallelized (paraRTLS): Since nodes in the same topological level are not adjacent, their \emph{reachable} columns can be computed in parallel.
 
-The only thing left to do is to find an efficient implementation for equation~(\ref{reachable-rec}) itself. For the adjacency matrix output, this is a bitwise \emph{or} of $deg^+(v)$ columns, yielding a total runtime of $\BigOh{\sum_{v \in V} deg^+(v) \frac{\abs{V}}{w}} = \BigOh{\frac{\abs{V} \abs{E}}{w}}$. For the adjacency list output, we walk through all $reachable(v)$ and use a bit array to detect duplicate nodes. By using the same trick as with BFS for resetting this array, we can achieve a run time of
+The only thing left to do is to find an efficient implementation for equation~(\ref{reachable-rec}) itself. For the adjacency matrix output, this is a bitwise \emph{or} of $deg^+(u)$ columns, yielding a total run time of $\BigOh{\sum_{u \in V} deg^+(u) \frac{\abs{V}}{w}} = \BigOh{\frac{\abs{V} \abs{E}}{w}}$. For the adjacency list output, we walk through all $\reachable(v)$ and use a bit array to detect duplicate nodes. By using the same trick as with BFS for resetting this array, we can achieve a run time of
 
 \begin{align*}
 \BigOh{\sum_{u \in V} \sum_{\substack{v \\ (u, v) \in E}} \abs{\reachable(v)}}
@@ -149,7 +151,7 @@ The only thing left to do is to find an efficient implementation for equation~(\
 
 \section{Evaluation}
 
-Experiments were performed using a machine with two Intel Xeon X5355 CPUs (with Hyperthreading disabled) running at 2.66 GHz; L2 cache is 2 $\times$ 4MB per physical CPU, L1 cache is 4 $\times$ 64KB per physical CPU distributed equally between instruction and data cache. The test machine has 24GB of RAM.
+Experiments were performed using a machine with two Intel Xeon X5355 CPUs (4 cores each, Hyperthreading disabled) running at 2.66 GHz; L2 cache is 2 $\times$ 4MB per physical CPU, L1 cache is 4 $\times$ 64KB per physical CPU distributed equally between instruction and data cache. The test machine has 24GB of RAM.
 %% TODO: figure out what type of RAM we have.
 The system is running Ubuntu 12.04.5 on Linux version 3.2.0. All code was compiled using gcc 4.9.0 on optimization level \texttt{O3}.
 
