@@ -179,7 +179,7 @@ The graphs used for these experiments were adopted from~\cite{preach}. The diffe
 
 The evaluation shows that \emph{parallel RTLS} is the fastest algorithm on the most instances, followed by \emph{parallel BFS}. For a completely sequential algorithm, \emph{RecMerge} shows surprisingly good performance, especially on sparse graphs.  As expected, the bit-parallel \emph{TLS64} performs better than \emph{TLS} on dense graphs, but worse on sparse graphs.
 
-For the single-source algorithms and TLS64, adjacency arrays are generally the fastest output format (where implemented), followed by adjacency lists. For the all-sources algorithms, the run times of adjacency lists and matrices can greatly differ in either direction, in accordance with the asymptotic run times.
+For the single-source algorithms and \emph{TLS64}, adjacency arrays are generally the fastest output format (where implemented), followed by adjacency lists. For the all-sources algorithms, the run times of adjacency lists and matrices can greatly differ in either direction, in accordance with the asymptotic run times.
 
 Interestingly, for most graphs the best algorithm is just as fast or even faster than the precalculation phase of \emph{PReaCH}, even though the former computes the complete closure.
 
