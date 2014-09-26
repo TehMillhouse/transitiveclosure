@@ -47,8 +47,20 @@ public:
     return adj[col_size * from + to / segment_size] & (1ul << (to % segment_size));
   }
 
+  void addEdges(int from, int to_begin, uint64_t mask) {
+    int i = to_begin / segment_size;
+    adj[from][i] |= (mask << (to_begin % segment_size));
+    if (to_begin % segment_size) {
+      adj[from][i+1] |= (mask >> (segment_size - to_begin % segment_size));
+    }
+  }
+
   uint64_t* rawCol(int col) {
     return &adj[col_size * col];
+
+  bool hasEdge(int from, int to)
+  {
+    return adj[from][to / segment_size] & (1ul << (to % segment_size));
   }
 };
 
@@ -254,6 +266,30 @@ public:
     return ret;
   }
 
+
+  std::unique_ptr<AdjacencyArrayGraph> sortedByLevel() {
+    setTopologicalLevels();
+
+    std::unique_ptr<AdjacencyArrayGraph> sortedG(new AdjacencyArrayGraph(nodes.size()));
+    std::vector<int> perm(nodes.size());
+    iota(perm.begin(), perm.end(), 0);
+    sort(perm.begin(), perm.end(), [this](int u, int v) { return nodes[u].level < nodes[v].level; });
+
+    std::vector<int> backPerm(nodes.size());
+    for (int i = 0; i < perm.size(); i++) {
+      backPerm[perm[i]] = i;
+    }
+
+    for (int i = 0; i < perm.size(); i++) {
+      sortedG->pushNode();
+      for (int v : successors(perm[i])) {
+        sortedG->pushEdge(backPerm[v]);
+      }
+    }
+
+    return sortedG;
+  }
+
   template <class G>
   std::unique_ptr<G> topologicalLevelSearch() {
     //TLS
@@ -343,6 +379,10 @@ public:
       }
     }
     return ret;
+  }
+
+  template<class G> std::unique_ptr<G> TLS64Perm() {
+    abort();
   }
 
   template<class G> void mergeSuccessors(G &g, int v, std::vector<bool> &reachedFlags) {
@@ -442,4 +482,39 @@ void AdjacencyArrayGraph::mergeSuccessors(AdjacencyMatrixGraph &g, int v, std::v
     }
   }
   g.addEdge(v, v);
+}
+
+template<> inline
+std::unique_ptr<AdjacencyMatrixGraph> AdjacencyArrayGraph::TLS64Perm() {
+  setTopologicalLevels();
+  for (Node &v : nodes) v.visited = 0;
+  const int segment_size = sizeof(Node::visited) * 8;
+
+  std::unique_ptr<AdjacencyMatrixGraph> ret(new AdjacencyMatrixGraph(nodes.size()));
+  std::vector<std::vector<int>> next(levels);
+
+  int i = 0;
+  while (i < nodes.size()) {
+    int level = nodes[i].level;
+    int j = i;
+    for (; j-i <= segment_size && j < nodes.size() && nodes[j].level == level; j++) {
+      nodes[j].visited = 1ull << (j-i);
+      next[level].push_back(j);
+    }
+    for (int l = level; l < levels; l++) {
+      for (int v : next[l]) {
+        for (int u : successors(v)) {
+          if (!nodes[u].visited)
+            next[nodes[u].level].push_back(u);
+          nodes[u].visited |= nodes[v].visited;
+        }
+
+        ret->addEdges(v, i, nodes[v].visited);
+        nodes[v].visited = 0;
+      }
+      next[l].clear();
+    }
+    i = j;
+  }
+  return ret;
 }

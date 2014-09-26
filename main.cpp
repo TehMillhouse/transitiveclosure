@@ -22,9 +22,9 @@ int exec(std::string algo, bool output, double seconds) {
     } else if (algo == "DFS") {
       gOut = g->depthFirstSearch<G>();
     } else if (algo == "TLS") {
-      gOut = g->topologicalLevelSearch<G>();
+      gOut = g->sortedByLevel()->topologicalLevelSearch<G>();
     } else if (algo == "TLS64") {
-      gOut = g->bitParallelTopologicalLevelSearch<G>();
+      gOut = g->sortedByLevel()->TLS64Perm<G>();
     } else if (algo == "WAR") {
       gOut = g->warshallALgorithm<G>();
     } else if (algo == "RecMerge") {
