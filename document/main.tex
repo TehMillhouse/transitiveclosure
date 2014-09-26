@@ -151,7 +151,7 @@ The only thing left to do is to find an efficient implementation for equation~(\
 
 \section{Evaluation}
 
-Experiments were performed using a machine with two Intel Xeon X5355 CPUs (4 cores each, Hyperthreading disabled) running at 2.66 GHz; L2 cache is 2 $\times$ 4MB per physical CPU, L1 cache is 4 $\times$ 64KB per physical CPU distributed equally between instruction and data cache. The test machine has 24GB of RAM.
+Our test results are listed in table~\ref{results}. Experiments were performed using a machine with two Intel Xeon X5355 CPUs (4 cores each, Hyperthreading disabled) running at 2.66 GHz; L2 cache is 2 $\times$ 4MB per physical CPU, L1 cache is 4 $\times$ 64KB per physical CPU distributed equally between instruction and data cache. The test machine has 24GB of RAM.
 %% TODO: figure out what type of RAM we have.
 The system is running Ubuntu 12.04.5 on Linux version 3.2.0. All code was compiled using gcc 4.9.0 on optimization level \texttt{O3}.
 
@@ -178,9 +178,10 @@ The graphs used for these experiments were adopted from~\cite{preach}. The diffe
 
 \section{Conclusion}
 
-The evaluation shows that \emph{RecMerge} is the fastest algorithm on the most instances, followed by \emph{paraBFS}. For the most part, adjacency lists are the fastest output format for both algorithms, but especially for \emph{RecMerge}, adjacency matrices can be an order of magnitude slower or faster on a few instances.
+The evaluation shows that \emph{parallel RTLS} is the fastest algorithm on the most instances, followed by \emph{parallel BFS}. For the most part, adjacency lists are the fastest output format for both algorithms, but especially for \emph{RecMerge}, adjacency matrices can be an order of magnitude slower or faster on a few instances. For a completely sequential algorithm, \emph{RecMerge} shows surprisingly good performance, especially on sparse graphs.
+As expected, the bit-parallel \emph{TLS64} performs better than \emph{TLS} on dense graphs, but worse on sparse graphs.
+Interestingly, the precalculation phase of \emph{PReaCH} often already takes significantly longer than the best algorithm. This indicates that PReaCH is not suited for this use-case, at least in terms of computation time.
 
-To create a more fair comparison between the two algorithms, conclusions should be postponed until after RecMerge and/or RTLS have been parallelized.
 
 \bibliographystyle{apalike}
 \bibliography{main}
